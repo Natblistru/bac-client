@@ -1,0 +1,76 @@
+/* containerul cu 3 coloane: stânga | mâner | dreapta */
+.split {
+  display: grid;
+  grid-template-columns: 1fr 8px 1fr; /* va fi suprascris din React cu leftPx */
+  gap: 0;
+  height: calc(100vh - 80px); /* ajustează după headerul tău */
+  background: var(--bg, #f6f7f8);
+}
+
+/* panouri */
+.pane {
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #d9dce0;
+}
+.left-pane { border-right: none; }
+.right-pane { border-left: none; }
+
+/* mânerul (divider) */
+/* mânerul (divider) */
+.divider {
+  position: relative;
+  cursor: col-resize;
+  background: #eef0f3;
+  border-left: 1px solid #d9dce0;
+  border-right: 1px solid #d9dce0;
+  width: 12px;  
+}
+.divider:hover { background: #e7ebf4; }
+
+/* „grip” vizual în centru (ca în imagine) */
+.divider .grip {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 25px;
+  height: 25px;
+  border: 1px solid #333;
+  border-radius: 2px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 0 rgba(0,0,0,.06);
+  z-index: 1;
+}
+
+/* simbolul ↔ în mijloc */
+.divider .grip::before,
+.divider .grip::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0; height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+}
+.divider .grip::before {          /* săgeata stânga */
+  left: 5px;
+  border-right: 6px solid #333;
+}
+.divider .grip::after {           /* săgeata dreapta */
+  right: 5px;
+  border-left: 6px solid #333;
+}
+
+/* accesibilitate focus pe mâner */
+.divider:focus { outline: 2px solid #1a73e8; outline-offset: -2px; }
+
+/* pe ecrane mici, cade pe o singură coloană (fără redimensionare) */
+@media (max-width: 980px) {
+  .split { grid-template-columns: 1fr; }
+  .divider { display: none; }
+}
