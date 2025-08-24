@@ -50,13 +50,17 @@ body { margin: 0; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; c
   padding: 14px 14px 4px;
 }
 
-.q-head { display: grid; grid-template-columns: 48px 1fr; gap: 10px; align-items: center; }
+.q-head { display: grid; grid-template-columns: 48px 1fr; gap: 10px; }
 .q-no {
   display: inline-flex; align-items: center; justify-content: center;
   width: 40px; height: 40px; border-radius: 8px;
   background: var(--bg); border: 1px solid var(--border); font-weight: 600;
 }
-.q-text { margin: 0; }
+.q-text { 
+  margin: 0; 
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 18px;
+}
 
 .choices { display: grid; grid-template-columns: 1fr; margin: 8px 0 10px; gap: 6px; }
 .choice {
@@ -82,17 +86,24 @@ body { margin: 0; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; c
 }
 
 /* aspect „manual”: serif, justificat, indent pe primul rând */
-.reading p {
+.reading p, .question p {
   font-family: "Times New Roman", Georgia, serif;
   font-size: 18px;
   line-height: 1.6;
   text-align: justify;
   text-justify: inter-word;
   hyphens: auto;              /* ajută la despărțiri */
+}
+
+.reading p  {
   margin: 0 0 0.9em;
 }
 
-.reading p.indent { text-indent: 2em; }
+.question p  {
+  margin: 0 0 0;
+}
+
+.reading p.indent, .question p.indent { text-indent: 2em; }
 
 /* replicile: fără indent pe prima linie, dar împinse la dreapta */
 .reading p.dialogue {
@@ -115,3 +126,72 @@ body { margin: 0; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; c
   .grid { grid-template-columns: 1fr; }
   .left, .right { max-height: none; }
 }
+
+/* containerul răspunsului liber */
+.free-answer { margin-top: 8px; }
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0 12px;
+}
+
+.field-row label {
+  min-width: 160px;
+  font-weight: 600;
+}
+
+.field-row input {
+  flex: 1;
+  height: 30px;
+  padding: 4px 6px;
+  border: none;
+  border-bottom: 1px solid #333;
+  background: transparent;
+  outline: none;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 19px;
+  color: #023e8a;
+}
+
+/* etichetă deasupra pentru textarea */
+.field-col label {
+  display: block;
+  font-weight: 600;
+  margin: 4px 0 6px;
+}
+
+/* textarea cu linii, ca în poză */
+.free-answer textarea {
+  resize: none;
+  width: 100%;
+  border: none;
+  outline: none;
+  padding: 6px 6px;
+  line-height: 26px;
+  /* height: calc(4 * 26px); */
+  background-attachment: local;
+  overflow-y: hidden;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 19px;
+  color: #023e8a;
+}
+
+/* rânduri „caiet” */
+.free-answer textarea.lined {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 25px,
+    #333 26px
+  );
+}
+
+.char-count {
+  text-align: right;
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+

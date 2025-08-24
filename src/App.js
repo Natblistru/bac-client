@@ -1,46 +1,190 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import api, { bootCsrf } from './routes/api';
 import ResizableSplit from "./components/ResizableSplit";
 import "./App.css";
 
 const questions = [
   {
-    no: 47,
-    prompt:
-      "Keep your final objective in mind when you are planning to change jobs.",
+    no: 1,
+    prompt: (
+      <>
+        <p style={{ lineHeight: 1.6 }}>
+          Rescrie, din lista propusă, un sinonim contextual adecvat pentru
+          lexemul{" "}
+          <em>
+            <b>interes </b>
+            (Îmi petreceam timpul liber citind, iar interesul pentru astronomie,
+            fizică și matematică deviase într-o obsesie cronică, ...),
+          </em>{" "}
+          argumentându-ți alegerea într-un enunț.
+        </p>
+        <p className="indent">
+          <em>
+            Preocupare, avantaj, înclinație, grijă, atracție, câștig,
+            curiozitate, beneficiu.
+          </em>
+        </p>
+      </>
+    ),
   },
   {
-    no: 48,
+    no: 2,
     prompt:
       "It takes time to become familiar with the characteristics of a company you have joined.",
   },
   {
-    no: 49,
+    no: 3,
     prompt:
       "You should demonstrate determination to improve your job prospects.",
   },
   {
-    no: 50,
+    no: 4,
     prompt: "Make sure your approach for information is positive in tone.",
   },
   {
-    no: 51,
+    no: 5,
     prompt:
       "It is not certain that you will be given very much support in your job initially.",
   },
-  { no: 52, prompt: "Stay optimistic in spite of setbacks." },
+  { no: 6, prompt: "Stay optimistic in spite of setbacks." },
   {
-    no: 53,
+    no: 7,
     prompt: "Promotion isn’t the only way to increase your expertise.",
   },
-  { no: 54, prompt: "Ask for information about your shortcomings." },
+  { no: 8, prompt: "Ask for information about your shortcomings." },
   {
-    no: 55,
+    no: 9,
     prompt: "Some information you are given may not give a complete picture.",
   },
+];
+
+const questions1 = [
   {
-    no: 56,
-    prompt:
-      "It will be some time before you start giving your employers their money’s worth.",
+    no: 1,
+    prompt: (
+      <>
+        <p style={{ lineHeight: 1.6 }}>
+          Rescrie, din lista propusă, un sinonim contextual adecvat pentru
+          lexemul{" "}
+          <em>
+            <b>interes </b>
+            (Îmi petreceam timpul liber citind, iar interesul pentru astronomie,
+            fizică și matematică deviase într-o obsesie cronică, ...),
+          </em>{" "}
+          argumentându-ți alegerea într-un enunț.
+        </p>
+        <p className="indent">
+          <em>
+            Preocupare, avantaj, înclinație, grijă, atracție, câștig,
+            curiozitate, beneficiu.
+          </em>
+        </p>
+      </>
+    ),
+  }
+];
+
+const questions2 = [
+  {
+    no: 2,
+    prompt: (
+      <>
+        <p style={{ lineHeight: 1.6 }}>
+          Alcătuiește câte un enunț, ilustrând sensuri figurate ale cuvintelor:<b> școală, a citi, inimă.</b>
+        </p>
+      </>
+    ),
+  }
+];
+const questions3 = [  
+  {
+    no: 3,
+    prompt: (
+      <>
+        <p style={{ lineHeight: 1.6 }}>
+        Identifică tipul uman reprezentat de personajul-narator, susținându-ți afirmația cu două
+        citate din fragment, comentate în câte un enunț.
+        </p>
+      </>
+    ),
+  }
+];
+const questions4 = [  
+  {
+    no: 4,
+    prompt: (
+      <>
+        <p style={{ lineHeight: 1.6 }}>
+        Comentează, în text coerent de 6-7 rânduri, sugestia unei figuri de stil din fragmentul subliniat. (Rescrie și numește figura de stil.)
+        </p>
+      </>
+    ),
+  }
+];
+const questions5 = [ 
+  {
+    no: 5,
+    prompt: (
+      <>
+        <p style={{ lineHeight: 1.6 }}>
+        Schițează, în text coerent de 7-8 rânduri, portretul moral al <b>tatălui</b>, numind două
+        trăsături, susținute cu exemple din fragmentul analizat.
+        </p>
+      </>
+    ),
+  }
+];
+const questions6 = [   
+  { no: 6, 
+    prompt: (
+      <>
+        <p style={{ lineHeight: 1.6 }}>
+        Analizează, în spațiul rezervat, motivul literar al <b>pasiunii pentru cunoaștere</b> în textul dat, în raport cu același motiv dintr-un alt text din literatura română (numește textul și autorul, citează/prezintă o situație din textul ales).
+        </p>
+      </>
+    ),
+ }
+];
+const questions7 = [ 
+  {
+    no: 7,
+    prompt: (
+      <>
+        <p style={{ lineHeight: 1.6 }}>
+        Determină, în text coerent de 5-6 rânduri, atitudinea personajului-narator față de profesorul Hilbert, angajând două citate din fragmentul propus.
+        </p>
+      </>
+    ),
+  }
+];
+const questions8 = [   
+
+  { no: 8, 
+    prompt: (
+      <>
+        <p style={{ lineHeight: 1.6 }}>
+        Interpretează, în spațiul rezervat, valoarea stilistică a punctelor de suspensie din
+        secvența propusă:
+        </p>
+        <p style={{ lineHeight: 1.6 }}>
+          <em>
+          – Între timp te mai deprinzi și cu gospodăria. Eu, mâine-poimâine, ies din luptă. Se cuvine să moștenești tu afacerile. Până faci facultatea, găsești și-o fată bună... Trebuie și asta.
+          </em>
+        </p>
+      </>
+    ),
+  }
+];
+const questions9 = [    
+  {
+    no: 9,
+    prompt: (
+      <>
+        <p style={{ lineHeight: 1.6 }}>
+        Prezintă două argumente, ilustrate cu câte o secvenţă din text, care califică fragmentul dat ca pe o naraţiune.
+        </p>
+      </>
+    ),
   },
 ];
 
@@ -49,8 +193,24 @@ const letters = ["A", "B", "C", "D", "E"];
 export default function App() {
   const [answers, setAnswers] = useState({});
 
-  const handlePick = (qNo, letter) =>
-    setAnswers((prev) => ({ ...prev, [qNo]: letter }));
+  const [ping, setPing] = useState(null);
+
+  // Test GET public: /api/test
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const { data } = await api.get('/api/test');
+        if (alive) setPing(data); // ex: { ok: true }
+      } catch (e) {
+        console.error('API error', e);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+
+
 
   const done = Object.keys(answers).length;
 
@@ -69,36 +229,35 @@ export default function App() {
           <h2>Citește textul propus și realizează itemii:</h2>
 
           <p className="indent">
-          <span className="u"> Primii ani de după război au fost grei... Îmi petreceam timpul liber 
-             <b> citind</b>, iar interesul pentru astronomie,
-            fizică și matematică deviase într-o obsesie cronică, așa încât pot
-            zice că mi-am trăit adolescența într-o lume de cifre, legi și
-            formule. Am continuat să învăț la un liceu german, chiar dacă
-            însușisem româna într-atât de temeinic, încât doar cei cu urechea
-            prea fină își dădeau seama că nu sunt român. Eram de departe cel mai
-            bun elev din clasă la toate limbile, însă patima mea erau științele
-            reale. </span>Visam să devin un mare matematician, dar tata, căruia îi mai
-            ofeream uneori niște crâmpeie din visurile mele, se uita la mine cu
-            milă.
+            <span className="u">
+              {" "}
+              Primii ani de după război au fost grei... Îmi petreceam timpul
+              liber
+              <b> citind</b>, iar interesul pentru astronomie, fizică și
+              matematică deviase într-o obsesie cronică, așa încât pot zice că
+              mi-am trăit adolescența într-o lume de cifre, legi și formule. Am
+              continuat să învăț la un liceu german, chiar dacă însușisem româna
+              într-atât de temeinic, încât doar cei cu urechea prea fină își
+              dădeau seama că nu sunt român. Eram de departe cel mai bun elev
+              din clasă la toate limbile, însă patima mea erau științele reale.{" "}
+            </span>
+            Visam să devin un mare matematician, dar tata, căruia îi mai ofeream
+            uneori niște crâmpeie din visurile mele, se uita la mine cu milă.
           </p>
 
           <p className="indent">
             – Ai să mori de foame cu linii și cifre, băiatule. Gândește-te și tu
-            la o<b> școală</b> ceva mai ca lumea și nici
-            n-are rost să te duci pentru învățătură tocmai la capătul
-            pământului. O să-ți spun un lucru: contează cine învață, nu unde. E
-            foarte bună și universitatea noastră. Rămâi acasă, lângă noi, nu
-            duci lipsă de nimic.
+            la o<b> școală</b> ceva mai ca lumea și nici n-are rost să te duci
+            pentru învățătură tocmai la capătul pământului. O să-ți spun un
+            lucru: contează cine învață, nu unde. E foarte bună și universitatea
+            noastră. Rămâi acasă, lângă noi, nu duci lipsă de nimic.
           </p>
 
+          <p className="indent">Apoi adăugă cu oarecare îndoială:</p>
           <p className="indent">
-            Apoi adăugă cu oarecare îndoială:
-          </p>
-          <p className="indent">
-           – Între timp te mai deprinzi și cu
-            gospodăria. Eu, mâine-poimâine, ies din luptă. Se cuvine să
-            moștenești tu afacerile. Până faci facultatea, găsești și-o fată
-            bună... Trebuie și asta.
+            – Între timp te mai deprinzi și cu gospodăria. Eu, mâine-poimâine,
+            ies din luptă. Se cuvine să moștenești tu afacerile. Până faci
+            facultatea, găsești și-o fată bună... Trebuie și asta.
           </p>
 
           <p className="indent">
@@ -119,9 +278,9 @@ export default function App() {
           <p className="indent">
             Pentru un viitor matematician, întâlnirea cu Hilbert era ceea ce
             pentru un pianist începător ar fi fost un contact direct cu
-            Beethoven: era întâlnirea cu „instanța supremă”. Când am ajuns în fața
-            ușii, pe care era gravat, pe o placă de bronz, numele ilustrului
-            matematician,
+            Beethoven: era întâlnirea cu „instanța supremă”. Când am ajuns în
+            fața ușii, pe care era gravat, pe o placă de bronz, numele
+            ilustrului matematician,
             <b> inima</b> mi se zbătea ca peștele în năvod.
           </p>
 
@@ -149,29 +308,372 @@ export default function App() {
 
         {/* Dreapta: întrebările 47–56 */}
         <aside className="right">
-          {questions.map((q) => (
+          {questions1.map((q) => (
             <div className="question" key={q.no}>
               <div className="q-head">
                 <span className="q-no">{q.no}</span>
                 <p className="q-text">{q.prompt}</p>
               </div>
 
-              <div className="choices">
-                {letters.map((L) => (
-                  <label key={L} className="choice">
-                    <input
-                      type="radio"
-                      name={`q-${q.no}`}
-                      value={L}
-                      checked={answers[q.no] === L}
-                      onChange={() => handlePick(q.no, L)}
-                    />
-                    <span>Consultant {L}</span>
-                  </label>
-                ))}
+              <div className="free-answer">
+                <div className="field-row">
+                  <label htmlFor={`syn-${q.no}`}>Sinonimul ales</label>
+                  <input
+                    id={`syn-${q.no}`}
+                    type="text"
+                    value={answers[q.no]?.synonym || ""}
+                    onChange={(e) =>
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [q.no]: {
+                          ...(prev[q.no] || {}),
+                          synonym: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="scrie sinonimul aici…"
+                  />
+                </div>
+
+                <div className="field-col">
+                  <label htmlFor={`arg-${q.no}`}>Argumentarea</label>
+                  <textarea
+                    id={`arg-${q.no}`}
+                    rows={4}
+                    className="lined"
+                    style = {{height: 104 }}  // 4 * 26
+                    maxLength={280} // limita de 280 caractere
+                    value={answers[q.no]?.argument ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value.slice(0, 280); // protecție suplimentară
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [q.no]: { ...(prev[q.no] || {}), argument: v },
+                      }));
+                    }}
+                  />
+                  <div className="char-count">
+                    {answers[q.no]?.argument?.length ?? 0}/280
+                  </div>
+                </div>
               </div>
             </div>
           ))}
+          {questions2.map((q) => (
+            <div className="question" key={q.no}>
+              <div className="q-head">
+                <span className="q-no">{q.no}</span>
+                <p className="q-text">{q.prompt}</p>
+              </div> 
+
+              <div className="free-answer">
+                <div className="field-col">
+                  <textarea
+                    id={`arg-${q.no}`}
+                    rows={6}
+                    className="lined"
+                    style = {{height: 156 }}        // 6 * 26px
+                    maxLength={380} // limita de380 caractere
+                    value={answers[q.no]?.argument ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value.slice(0, 380); // protecție suplimentară
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [q.no]: { ...(prev[q.no] || {}), argument: v },
+                      }));
+                    }}
+                  />
+                  <div className="char-count">
+                    {answers[q.no]?.argument?.length ?? 0}/380
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          {questions3.map((q) => (
+            <div className="question" key={q.no}>
+              <div className="q-head">
+                <span className="q-no">{q.no}</span>
+                <p className="q-text">{q.prompt}</p>
+              </div>
+
+              <div className="free-answer">
+                <div className="field-row">
+                  <label htmlFor={`syn-${q.no}`}>Tipul uman</label>
+                  <input
+                    id={`syn-${q.no}`}
+                    type="text"
+                    value={answers[q.no]?.synonym || ""}
+                    onChange={(e) =>
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [q.no]: {
+                          ...(prev[q.no] || {}),
+                          synonym: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="scrie tipul aici…"
+                  />
+                </div>
+
+                <div className="field-col">
+                  <label htmlFor={`arg-${q.no}`}>Citate şi comentarii</label>
+                  <textarea
+                    id={`arg-${q.no}`}
+                    rows={7}
+                    className="lined"
+                    style = {{height: 182 }}  // 7 * 26
+                    maxLength={580} // limita de 580 caractere
+                    value={answers[q.no]?.argument ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value.slice(0, 580); // protecție suplimentară
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [q.no]: { ...(prev[q.no] || {}), argument: v },
+                      }));
+                    }}
+                  />
+                  <div className="char-count">
+                    {answers[q.no]?.argument?.length ?? 0}/580
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          {questions4.map((q) => (
+            <div className="question" key={q.no}>
+              <div className="q-head">
+                <span className="q-no">{q.no}</span>
+                <p className="q-text">{q.prompt}</p>
+              </div>
+
+              <div className="free-answer">
+                <div className="field-row">
+                  <label htmlFor={`syn-${q.no}`}>Figura de stil</label>
+                  <input
+                    id={`syn-${q.no}`}
+                    type="text"
+                    value={answers[q.no]?.synonym || ""}
+                    onChange={(e) =>
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [q.no]: {
+                          ...(prev[q.no] || {}),
+                          synonym: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="scrie figura de stil aici…"
+                  />
+                </div>
+
+                <div className="field-col">
+                  <label htmlFor={`arg-${q.no}`}>Comentariul</label>
+                  <textarea
+                    id={`arg-${q.no}`}
+                    rows={7}
+                    className="lined"
+                    style = {{height: 182 }}  // 7 * 26
+                    maxLength={580} // limita de 580 caractere
+                    value={answers[q.no]?.argument ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value.slice(0, 580); // protecție suplimentară
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [q.no]: { ...(prev[q.no] || {}), argument: v },
+                      }));
+                    }}
+                  />
+                  <div className="char-count">
+                    {answers[q.no]?.argument?.length ?? 0}/580
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          {questions5.map((q) => (
+            <div className="question" key={q.no}>
+              <div className="q-head">
+                <span className="q-no">{q.no}</span>
+                <p className="q-text">{q.prompt}</p>
+              </div> 
+
+              <div className="free-answer">
+                <div className="field-col">
+                  <textarea
+                    id={`arg-${q.no}`}
+                    rows={8}
+                    className="lined"
+                    style = {{height: 208 }}        // 8 * 26px
+                    maxLength={680} // limita de680 caractere
+                    value={answers[q.no]?.argument ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value.slice(0, 680); // protecție suplimentară
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [q.no]: { ...(prev[q.no] || {}), argument: v },
+                      }));
+                    }}
+                  />
+                  <div className="char-count">
+                    {answers[q.no]?.argument?.length ?? 0}/680
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          {questions6.map((q) => (
+            <div className="question" key={q.no}>
+              <div className="q-head">
+                <span className="q-no">{q.no}</span>
+                <p className="q-text">{q.prompt}</p>
+              </div> 
+
+              <div className="free-answer">
+                <div className="field-col">
+                  <textarea
+                    id={`arg-${q.no}`}
+                    rows={14}
+                    className="lined"
+                    style = {{height: 364 }}        // 14 * 26px
+                    maxLength={1680} // limita de1680 caractere
+                    value={answers[q.no]?.argument ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value.slice(0, 1680); // protecție suplimentară
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [q.no]: { ...(prev[q.no] || {}), argument: v },
+                      }));
+                    }}
+                  />
+                  <div className="char-count">
+                    {answers[q.no]?.argument?.length ?? 0}/1680
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          {questions7.map((q) => (
+            <div className="question" key={q.no}>
+              <div className="q-head">
+                <span className="q-no">{q.no}</span>
+                <p className="q-text">{q.prompt}</p>
+              </div> 
+
+              <div className="free-answer">
+                <div className="field-col">
+                  <textarea
+                    id={`arg-${q.no}`}
+                    rows={6}
+                    className="lined"
+                    style = {{height: 156 }}        // 6 * 26px
+                    maxLength={680} // limita de 680 caractere
+                    value={answers[q.no]?.argument ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value.slice(0, 680); // protecție suplimentară
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [q.no]: { ...(prev[q.no] || {}), argument: v },
+                      }));
+                    }}
+                  />
+                  <div className="char-count">
+                    {answers[q.no]?.argument?.length ?? 0}/680
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          {questions8.map((q) => (
+            <div className="question" key={q.no}>
+              <div className="q-head">
+                <span className="q-no">{q.no}</span>
+                <p className="q-text">{q.prompt}</p>
+              </div> 
+
+              <div className="free-answer">
+                <div className="field-col">
+                  <textarea
+                    id={`arg-${q.no}`}
+                    rows={7}
+                    className="lined"
+                    style = {{height: 182 }}        // 7 * 26px
+                    maxLength={680} // limita de 680 caractere
+                    value={answers[q.no]?.argument ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value.slice(0, 680); // protecție suplimentară
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [q.no]: { ...(prev[q.no] || {}), argument: v },
+                      }));
+                    }}
+                  />
+                  <div className="char-count">
+                    {answers[q.no]?.argument?.length ?? 0}/680
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          {questions9.map((q) => (
+            <div className="question" key={q.no}>
+              <div className="q-head">
+                <span className="q-no">{q.no}</span>
+                <p className="q-text">{q.prompt}</p>
+              </div>
+
+              <div className="free-answer">
+                {/* ARGUMENTUL 1 */}
+                <div className="field-col">
+                  <label htmlFor={`arg1-${q.no}`}>Argumentul 1</label>
+                  <textarea
+                    id={`arg1-${q.no}`}
+                    rows={7}
+                    className="lined"
+                    style={{ height: 182 }}                // 7 * 26 
+                    maxLength={580}
+                    value={answers[q.no]?.argument1 ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value.slice(0, 580);
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [q.no]: { ...(prev[q.no] || {}), argument1: v },
+                      }));
+                    }}
+                  />
+                  <div className="char-count">
+                    {(answers[q.no]?.argument1?.length ?? 0)}/580
+                  </div>
+                </div>
+
+                {/* ARGUMENTUL 2 */}
+                <div className="field-col">
+                  <label htmlFor={`arg2-${q.no}`}>Argumentul 2</label>
+                  <textarea
+                    id={`arg2-${q.no}`}
+                    rows={7}
+                    className="lined"
+                    style={{ height: 182 }}                //* 7 * 26 *
+                    maxLength={580}
+                    value={answers[q.no]?.argument2 ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value.slice(0, 580);
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [q.no]: { ...(prev[q.no] || {}), argument2: v },
+                      }));
+                    }}
+                  />
+                  <div className="char-count">
+                    {(answers[q.no]?.argument2?.length ?? 0)}/580
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+
         </aside>
       </ResizableSplit>
     </div>
