@@ -4,25 +4,32 @@ import api from "../routes/api";
 import "./ListEvaluation.css";
 
 const STATUS_TEXT = { 0: "Evaluare", 1: "Public" };
+const MIN_CHARS = 6;
 
 export default function ListEvaluation() {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [allRows, setAllRows] = useState([]);   // toate evaluările (fără q)
+  const [rows, setRows] = useState([]);         // setul curent (allRows sau search)
+  const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
-
-  // seturi pentru selecții multiple
   const [selTypes, setSelTypes] = useState(new Set());
   const [selProfils, setSelProfils] = useState(new Set());
   const [selYears, setSelYears] = useState(new Set());
+  const [tooShort, setTooShort] = useState(false);
 
   const navigate = useNavigate();
 
+  // 1) Fetch inițial: toate evaluările
   useEffect(() => {
     let alive = true;
     (async () => {
+      setLoading(true);
       try {
-        const { data } = await api.get("/api/evaluations");
-        if (alive) setRows(Array.isArray(data) ? data : []);
+        const { data } = await api.get("/api/evaluations"); // fără q
+        const list = Array.isArray(data) ? data : (data.data ?? []);
+        if (alive) {
+          setAllRows(list);
+          setRows(list); // arătăm „toate” la început
+        }
       } finally {
         if (alive) setLoading(false);
       }
@@ -30,7 +37,47 @@ export default function ListEvaluation() {
     return () => { alive = false; };
   }, []);
 
-  // opțiuni unice pentru filtre (din backend)
+  // 2) Căutare doar când q.length ≥ 6; altfel revii la allRows
+  useEffect(() => {
+    const term = q.trim();
+
+    // caz: 1..5 caractere → nu căuta, arată „toate”
+    if (term !== "" && term.length < MIN_CHARS) {
+      setTooShort(true);
+      setRows(allRows);
+      return; // fără request
+    }
+    setTooShort(false);
+
+    // caz: șir gol → toate
+    if (term === "") {
+      setRows(allRows);
+      return;
+    }
+
+    // caz: term.length ≥ 6 → căutare în content (backend)
+    let alive = true;
+    const ctrl = new AbortController();
+    const t = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const { data } = await api.get("/api/evaluations", {
+          params: { q: term },
+          signal: ctrl.signal,
+        });
+        const list = Array.isArray(data) ? data : (data.data ?? []);
+        if (alive) setRows(list);
+      } catch (_) {
+        /* ignore */
+      } finally {
+        if (alive) setLoading(false);
+      }
+    }, 300); // debounce
+
+    return () => { alive = false; clearTimeout(t); ctrl.abort(); };
+  }, [q, allRows]);
+
+  // opțiuni pentru filtre
   const typeOptions = useMemo(
     () => [...new Set(rows.map(r => r.type).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'ro')),
     [rows]
@@ -40,12 +87,10 @@ export default function ListEvaluation() {
     [rows]
   );
   const yearOptions = useMemo(
-    () => [...new Set(rows.map(r => r.year).filter(v => v !== null && v !== undefined))]
-            .sort((a,b)=>Number(b)-Number(a)),
+    () => [...new Set(rows.map(r => r.year).filter(v => v != null))].sort((a,b)=>Number(b)-Number(a)),
     [rows]
   );
 
-  // utilitare pentru toggle în Set
   const toggleIn = (setter) => (value) =>
     setter(prev => {
       const next = new Set(prev);
@@ -59,23 +104,15 @@ export default function ListEvaluation() {
     setSelYears(new Set());
   };
 
-  // filtrarea combinată (cautare + filtre multiple)
+  // DOAR filtre locale (fără bySearch pe q!)
   const filtered = useMemo(() => {
-    const s = q.trim().toLowerCase();
     return rows.filter(r => {
-      const bySearch =
-        !s ||
-        [r.name, r.year, r.type, r.profil, STATUS_TEXT[r.status]]
-          .map(v => (v ?? "").toString().toLowerCase())
-          .some(v => v.includes(s));
-
-      const byType   = selTypes.size   ? selTypes.has(String(r.type))   : true;
+      const byType   = selTypes.size   ? selTypes.has(String(r.type))     : true;
       const byProfil = selProfils.size ? selProfils.has(String(r.profil)) : true;
-      const byYear   = selYears.size   ? selYears.has(String(r.year))   : true;
-
-      return bySearch && byType && byProfil && byYear;
+      const byYear   = selYears.size   ? selYears.has(String(r.year))     : true;
+      return byType && byProfil && byYear;
     });
-  }, [rows, q, selTypes, selProfils, selYears]);
+  }, [rows, selTypes, selProfils, selYears]);
 
   return (
     <div className="page-bg">
@@ -119,6 +156,9 @@ export default function ListEvaluation() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
               />
+              {tooShort && <div className="muted" style={{marginTop: 6}}>
+                Introdu cel puțin 6 caractere pentru a porni căutarea.
+              </div>}
             </div>
 
             {loading ? (
