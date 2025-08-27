@@ -8,9 +8,15 @@ body { background: var(--bg); }
   min-height: 100dvh;
 }
 
+.page-title {
+  padding: 0 0 20px;
+  border-bottom: 1px solid rgba(16,22,47,0.28);
+}
+
+
 /* container centrat, cu padding pe laterale */
 .container {
-  width: min(1200px, 100% - 48px); /* 24px margine pe stânga/dreapta la ecrane mici */
+  width: min(1200px, 100% - 64px); /* 24px margine pe stânga/dreapta la ecrane mici */
   margin-inline: auto;
   padding-block: 24px 48px;        /* sus / jos */
 }
@@ -20,12 +26,95 @@ body { background: var(--bg); }
   .container { width: min(1200px, 100% - 64px); } /* ~32px pe laterale */
 }
 
+/* layout cu aside stânga + conținut */
+.layout {
+  display:grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+}
+
+/* ASIDE (filtre) */
+.filters {
+  position: sticky;
+  top: 16px;
+  align-self: start;
+
+  /* fallback dacă nu există suport pentru backdrop-filter */
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 0 10px 30px rgba(13, 26, 55, 0.08);
+  z-index: 1;
+}
+
+/* Activează blur + saturație pe browserele care suportă */
+@supports ((-webkit-backdrop-filter: blur(8px)) or (backdrop-filter: blur(8px))) {
+  .filters {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.60),
+      rgba(255, 255, 255, 0.32)
+    );
+    -webkit-backdrop-filter: blur(10px) saturate(120%);
+    backdrop-filter: blur(10px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+  }
+
+  /* granulație foarte discretă, pentru aspect „mat” */
+  .filters::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background-image: radial-gradient(rgba(255,255,255,0.35) 1px, transparent 1.2px);
+    background-size: 6px 6px;
+    opacity: 0.15;
+  }
+}
+
+/* capul de filtru rămâne lizibil pe sticlă */
+.filters-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.link-btn {
+  background:none; border:none; color:#2563eb; cursor:pointer; padding:4px 6px;
+}
+.link-btn:hover { text-decoration: underline; }
+
+.filter-group { margin-top:12px; }
+.filter-group h3 {
+  margin: 6px 0 8px; font-size: .95rem; color:#374151; font-weight:600;
+}
+.checklist { display:grid; gap:8px; }
+.chk { display:flex; gap:8px; align-items:center; font-size:.95rem; color:#111827; }
+.chk input { transform: translateY(1px); }
+.muted { color:#9ca3af; }
+
+/* toolbar + grid (dreapta) */
 .cc-toolbar { display: flex; align-items: center; gap: 12px; justify-content: space-between; }
 
+/* bara de căutare ocupă toată lățimea zonei de conținut */
+.cc-searchbar { margin-bottom: 12px; }
 .cc-search {
-  max-width: 360px; width: 100%;
-  padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; background: #fff;
+  width: 100%;                  /* cheia: full width în zona main */
+  max-width: none;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%231f2937' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><line x1='16.65' y1='16.65' x2='21' y2='21'/></svg>") no-repeat right 12px center;
+  background-size: 18px 18px;
+  padding-right: 40px;
 }
+
+
 
 /* GRID rămâne la fel ca înainte */
 .cc-grid {
