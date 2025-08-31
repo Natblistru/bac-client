@@ -59,7 +59,7 @@ export default function Evaluation() {
         <section className="left reading">
           <div
             dangerouslySetInnerHTML={{
-              __html: tree?.sources?.[0]?.content?.html,
+              __html: tree?.sources?.[2]?.content?.html,
             }}
           />
         </section>
@@ -67,7 +67,7 @@ export default function Evaluation() {
         {/* Dreapta: întrebările 47–56 */}
         <aside className="right">
           <>
-            {tree?.sources?.[0]?.items?.map((item) => (
+            {tree?.sources?.[2]?.items?.map((item) => (
               <div className="question" key={item.id ?? item.order_number}>
                 <div className="q-head">
                   <span className="q-no">{item.order_number}</span>
@@ -122,7 +122,7 @@ export default function Evaluation() {
                             id={inputId}
                             rows={rows}
                             className="lined"
-                            style={{ height: rows * 26 }}
+                            // style={{ height: rows * 26 }}
                             maxLength={max}
                             value={val}
                             onChange={(e) => {
