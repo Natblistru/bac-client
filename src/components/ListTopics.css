@@ -1,5 +1,19 @@
 /* fundalul general ca în poza 1 */
-:root { --bg: #FFF0E5; --ribbon: #E9F8CC; --text: #151515; }
+:root {
+  --bg: #FFF0E5; 
+  --ribbon: #E9F8CC; 
+  --text: #151515;
+  --bg-chip: #ff7f51;
+  --bg-chip-active: #2c7be5;
+  --bg-chip-clear: #c92a2a;
+  --fg: #e9ecef;
+  --fg-dim: #a6aab2;
+  --fg-inv: #fff;
+  --bd: #262a31;
+  --gap: 12px;
+  --rad: 12px;
+  --shadow: 0 6px 16px rgba(0,0,0,.25);
+}
 body { background: var(--bg); }
 
 /* fundalul dorit pe toată pagina */
@@ -166,9 +180,18 @@ body { background: var(--bg); }
   font-family: "Consolas", sans-serif;
 }
 
-/* restul stilurilor ca înainte */
 .cc-body { padding: 14px; color: #151515; }
-.cc-title { margin: 2px 0 6px; font-size: 1.05rem; }
+.cc-title {
+  --lh: 1.25;
+  line-height: var(--lh);
+  min-height: calc(2em * var(--lh)); /* asigură „spațiul pentru 2 rânduri” */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;  
+  line-clamp: 2;          
+  overflow: hidden;
+}
+
 .cc-desc { margin: 0 0 12px; color: #3f3f46; }
 .cc-divider { border-bottom: 2px dotted rgba(0,0,0,.25); margin: 8px 0 10px; }
 .cc-foot { display:flex; justify-content:space-between; align-items:center; }
@@ -177,3 +200,67 @@ body { background: var(--bg); }
 
 /* skeleton (opțional, dacă îl folosești) */
 .skeleton { height:190px; background:#fff; border:1px solid rgba(0,0,0,.15); border-radius:10px; }
+
+.filters .row {
+  display: grid;
+  gap: 8px;
+}
+
+/* Domenii listă verticală + „creangă” sub element */
+.domains-list {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.domain-item { display: block; }
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+}
+
+.chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--bg-chip);
+  background: var(--bg-chip);
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform .12s ease, filter .2s ease;
+}
+
+.chip:hover { transform: translateY(-1px); }
+.chip:active { transform: translateY(0); }
+
+.chip.active {
+  background: var(--bg-chip-active);
+  border-color: transparent;
+  color: var(--fg-inv);
+}
+
+.chip.clear {
+  background: var(--bg-chip-clear);
+  border-color: transparent;
+  color: var(--fg-inv);
+}
+
+.units-row {
+  margin-top: 8px;
+  margin-left: 10px;
+  padding-left: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  border-left: 2px solid var(--bd); /* aspect de „creangă” */
+}
+
+/* chips mai compacte pentru unități */
+.chip.small {
+  font-size: 13px;
+  padding: 6px 10px;
+}

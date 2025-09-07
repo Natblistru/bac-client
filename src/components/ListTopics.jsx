@@ -5,16 +5,24 @@ import "./ListTopics.css";
 
 const STATUS_TEXT = { 0: "Topic", 1: "Public" };
 const MIN_CHARS = 6;
+// helpers pt. acces sigur
+const roCmp = (a, b) => String(a).localeCompare(String(b), "ro");
+const domainOf = (t) => t?.topic_content_unit?.topic_domain?.name ?? "";
+const unitOf = (t) => t?.topic_content_unit?.name ?? "";
 
 export default function ListTopics() {
-  const [allRows, setAllRows] = useState([]);   // toate evaluările (fără q)
-  const [rows, setRows] = useState([]);         // setul curent (allRows sau search)
+  const [allRows, setAllRows] = useState([]); // toate evaluările (fără q)
+  const [rows, setRows] = useState([]); // setul curent (allRows sau search)
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
   const [selTypes, setSelTypes] = useState(new Set());
   const [selProfils, setSelProfils] = useState(new Set());
   const [selYears, setSelYears] = useState(new Set());
   const [tooShort, setTooShort] = useState(false);
+
+  // filtre locale
+  const [selDomains, setSelDomains] = useState(new Set());
+  const [selUnits, setSelUnits] = useState(new Set());
 
   const navigate = useNavigate();
 
@@ -25,7 +33,7 @@ export default function ListTopics() {
       setLoading(true);
       try {
         const { data } = await api.get("/api/topics"); // fără q
-        const list = Array.isArray(data) ? data : (data.data ?? []);
+        const list = Array.isArray(data) ? data : data.data ?? [];
         if (alive) {
           setAllRows(list);
           setRows(list); // arătăm „toate” la început
@@ -34,7 +42,9 @@ export default function ListTopics() {
         if (alive) setLoading(false);
       }
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, []);
 
   // 2) Căutare doar când q.length ≥ 6; altfel revii la allRows
@@ -65,7 +75,7 @@ export default function ListTopics() {
           params: { q: term },
           signal: ctrl.signal,
         });
-        const list = Array.isArray(data) ? data : (data.data ?? []);
+        const list = Array.isArray(data) ? data : data.data ?? [];
         if (alive) setRows(list);
       } catch (_) {
         /* ignore */
@@ -74,77 +84,144 @@ export default function ListTopics() {
       }
     }, 300); // debounce
 
-    return () => { alive = false; clearTimeout(t); ctrl.abort(); };
+    return () => {
+      alive = false;
+      clearTimeout(t);
+      ctrl.abort();
+    };
   }, [q, allRows]);
 
-  // opțiuni pentru filtre
-  const typeOptions = useMemo(
-    () => [...new Set(rows.map(r => r.type).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'ro')),
-    [rows]
-  );
-  const profilOptions = useMemo(
-    () => [...new Set(rows.map(r => r.profil).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'ro')),
-    [rows]
-  );
-  const yearOptions = useMemo(
-    () => [...new Set(rows.map(r => r.year).filter(v => v != null))].sort((a,b)=>Number(b)-Number(a)),
-    [rows]
-  );
+  const domainOptions = useMemo(() => {
+    return [...new Set(rows.map(domainOf).filter(Boolean))].sort(roCmp);
+  }, [rows]);
+
+  const unitsByDomain = useMemo(() => {
+    const map = new Map();
+    for (const t of rows) {
+      const d = domainOf(t);
+      const u = unitOf(t);
+      if (!d || !u) continue;
+      if (!map.has(d)) map.set(d, new Set());
+      map.get(d).add(u);
+    }
+    return map;
+  }, [rows]);
 
   const toggleIn = (setter) => (value) =>
-    setter(prev => {
+    setter((prev) => {
       const next = new Set(prev);
       next.has(value) ? next.delete(value) : next.add(value);
       return next;
     });
 
   const clearFilters = () => {
-    setSelTypes(new Set());
-    setSelProfils(new Set());
-    setSelYears(new Set());
+    setSelDomains(new Set());
+    setSelUnits(new Set());
   };
 
-  // DOAR filtre locale (fără bySearch pe q!)
-  const filtered = useMemo(() => {
-    return rows.filter(r => {
-      const byType   = selTypes.size   ? selTypes.has(String(r.type))     : true;
-      const byProfil = selProfils.size ? selProfils.has(String(r.profil)) : true;
-      const byYear   = selYears.size   ? selYears.has(String(r.year))     : true;
-      return byType && byProfil && byYear;
+  // 5) Când se schimbă domeniile, păstrează doar unitățile valide
+  useEffect(() => {
+    if (!selDomains.size) return;
+    setSelUnits((prev) => {
+      const keep = new Set();
+      for (const u of prev) {
+        for (const d of selDomains) {
+          const units = unitsByDomain.get(d);
+          if (units?.has(u)) {
+            keep.add(u);
+            break;
+          }
+        }
+      }
+      return keep;
     });
-  }, [rows, selTypes, selProfils, selYears]);
+  }, [selDomains, unitsByDomain]);
+
+  // 6) Dacă se schimbă rows (după căutare), prune selecția invalidă
+  useEffect(() => {
+    setSelDomains((prev) => {
+      if (!prev.size) return prev;
+      const valid = new Set(domainOptions);
+      const keep = new Set();
+      for (const d of prev) if (valid.has(d)) keep.add(d);
+      return keep;
+    });
+    setSelUnits((prev) => {
+      if (!prev.size) return prev;
+      const allValid = new Set();
+      for (const d of domainOptions) {
+        for (const u of unitsByDomain.get(d) ?? []) {
+          allValid.add(u);
+        }
+      }
+      const keep = new Set();
+      for (const u of prev) if (allValid.has(u)) keep.add(u);
+      return keep;
+    });
+  }, [rows, domainOptions, unitsByDomain]);
+
+  // 7) Filtrarea locală Domain/Unit peste rows (fără bySearch pe q!)
+  const filtered = useMemo(() => {
+    return rows.filter((t) => {
+      const d = domainOf(t);
+      const u = unitOf(t);
+      const byDomain = selDomains.size ? selDomains.has(d) : true;
+      const byUnit = selUnits.size ? selUnits.has(u) : true;
+      return byDomain && byUnit;
+    });
+  }, [rows, selDomains, selUnits]);
+
+  console.log(filtered);
 
   return (
     <div className="page-bg">
       <div className="container">
-        <h1 className="page-title">Atelier BAC: teorie și aplicații</h1>
+        <h1 className="page-title">Temele pentru BAC: teorie și aplicații</h1>
 
         <div className="layout">
           {/* ASIDE stânga */}
           <aside className="filters" aria-label="Filtre">
             <div className="filters-head">
               <h2>Filtre</h2>
-              <button className="link-btn" onClick={clearFilters}>Resetează</button>
+              <button className="link-btn" onClick={clearFilters}>
+                Resetează
+              </button>
             </div>
 
-            <FilterGroup
-              title="Tip"
-              options={typeOptions}
-              selected={selTypes}
-              onToggle={toggleIn(setSelTypes)}
-            />
-            <FilterGroup
-              title="Profil"
-              options={profilOptions}
-              selected={selProfils}
-              onToggle={toggleIn(setSelProfils)}
-            />
-            <FilterGroup
-              title="An"
-              options={yearOptions}
-              selected={selYears}
-              onToggle={toggleIn(setSelYears)}
-            />
+            <div className="row">
+              <strong>Domenii</strong>
+              <ul className="domains-list">
+                {domainOptions.map((d) => {
+                  const active = selDomains.has(d);
+                  const units = [...(unitsByDomain.get(d) ?? [])].sort(roCmp);
+                  return (
+                    <li key={d} className="domain-item">
+                      <button
+                        className={`chip ${active ? "active" : ""}`}
+                        onClick={() => toggleIn(setSelDomains)(d)}
+                        aria-expanded={active}
+                      >
+                        {d}
+                      </button>
+
+                      {active && !!units.length && (
+                        <div className="units-row">
+                          {units.map((u) => (
+                            <button
+                              key={u}
+                              className={`chip small ${selUnits.has(u) ? "active" : ""}`}
+                              onClick={() => toggleIn(setSelUnits)(u)}
+                            >
+                              {u}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           </aside>
 
           {/* CONȚINUT dreapta */}
@@ -156,9 +233,11 @@ export default function ListTopics() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
               />
-              {tooShort && <div className="muted" style={{marginTop: 6}}>
-                Introdu cel puțin 6 caractere pentru a porni căutarea.
-              </div>}
+              {tooShort && (
+                <div className="muted" style={{ marginTop: 6 }}>
+                  Introdu cel puțin 6 caractere pentru a porni căutarea.
+                </div>
+              )}
             </div>
 
             {loading ? (
@@ -176,12 +255,21 @@ export default function ListTopics() {
                       role="button"
                       tabIndex={0}
                       onClick={() => navigate(`/topics/${r.id}`)}
-                      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && navigate(`/topics/${r.id}`)}
+                      onKeyDown={(e) =>
+                        (e.key === "Enter" || e.key === " ") &&
+                        navigate(`/topics/${r.id}`)
+                      }
                     >
-                      <div className="cc-ribbon">{STATUS_TEXT[r.status] ?? "Public"}</div>
+                      <div className="cc-ribbon">
+                        {STATUS_TEXT[r.status] ?? "Public"}
+                      </div>
                       <div className="cc-body">
                         <h3 className="cc-title">{r.name ?? "Fără titlu"}</h3>
-                        <p className="cc-desc">{r.profil ? `Profil ${r.profil}.` : "Profil real, umanist"}</p>
+                        <p className="cc-desc">
+                          {r.profil
+                            ? `Profil ${r.profil}.`
+                            : "Profil real, umanist"}
+                        </p>
                         <div className="cc-divider" />
                         <div className="cc-foot">
                           <span className="cc-left">{r.year ?? "—"}</span>
