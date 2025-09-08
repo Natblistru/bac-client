@@ -2,10 +2,10 @@
 :root {
   --bg: #FFF0E5; 
   --ribbon: #E9F8CC; 
-  --text: #151515;
-  --bg-chip: #ff7f51;
-  --bg-chip-active: #2c7be5;
-  --bg-chip-clear: #c92a2a;
+  --text: hsl(0, 0%, 8%);
+  --bg-chip: #ede0d4;
+  --bg-chip-active: #a7bbec;
+  --bg-chip-clear: #040303;
   --fg: #e9ecef;
   --fg-dim: #a6aab2;
   --fg-inv: #fff;
@@ -225,11 +225,12 @@ body { background: var(--bg); }
 
 .chip {
   padding: 8px 12px;
-  border-radius: 999px;
+  border-radius: 10px;
   border: 1px solid var(--bg-chip);
   background: var(--bg-chip);
-  color: white;
+  color: #685634;
   font-size: 14px;
+  letter-spacing: 0.02em;
   cursor: pointer;
   transition: transform .12s ease, filter .2s ease;
 }

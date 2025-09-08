@@ -1,158 +1,191 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback, useDeferredValue, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../routes/api";
 import "./ListTopics.css";
 
 const STATUS_TEXT = { 0: "Topic", 1: "Public" };
 const MIN_CHARS = 6;
-// helpers pt. acces sigur
-const roCmp = (a, b) => String(a).localeCompare(String(b), "ro");
+
+// acces sigur
 const domainOf = (t) => t?.topic_content_unit?.topic_domain?.name ?? "";
-const unitOf = (t) => t?.topic_content_unit?.name ?? "";
+const unitOf   = (t) => t?.topic_content_unit?.name ?? "";
+
+/** card topic (memo ca să nu re-randeze toată lista la fiecare mică schimbare) */
+const TopicCard = memo(function TopicCard({ r, onOpen }) {
+  return (
+    <div className="cc-card-wrap" key={r.id}>
+      <article
+        className="cc-card"
+        role="button"
+        tabIndex={0}
+        data-id={r.id}
+        onClick={onOpen}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") onOpen(e);
+        }}
+      >
+        <div className="cc-ribbon">{STATUS_TEXT[r.status] ?? "Public"}</div>
+        <div className="cc-body">
+          <h3 className="cc-title">{r.name ?? "Fără titlu"}</h3>
+          <p className="cc-desc">{r.profil ? `Profil ${r.profil}.` : "Profil real, umanist"}</p>
+          <div className="cc-divider" />
+          <div className="cc-foot">
+            <span className="cc-left">{r.year ?? "—"}</span>
+            <span className="cc-right">{r.type ?? "—"}</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  );
+});
 
 export default function ListTopics() {
-  const [allRows, setAllRows] = useState([]); // toate evaluările (fără q)
-  const [rows, setRows] = useState([]); // setul curent (allRows sau search)
+  const [allRows, setAllRows] = useState([]);  // colecția de bază
+  const [rows, setRows]       = useState([]);  // rezultat curent (toate sau căutare)
   const [loading, setLoading] = useState(false);
-  const [q, setQ] = useState("");
-  const [selTypes, setSelTypes] = useState(new Set());
-  const [selProfils, setSelProfils] = useState(new Set());
-  const [selYears, setSelYears] = useState(new Set());
+
+  const [q, setQ]             = useState("");
+  const deferredQ             = useDeferredValue(q);  // UI rămâne fluid cât tastezi
   const [tooShort, setTooShort] = useState(false);
 
   // filtre locale
-  const [selDomains, setSelDomains] = useState(new Set());
-  const [selUnits, setSelUnits] = useState(new Set());
+  const [selDomains, setSelDomains] = useState(() => new Set());
+  const [selUnits, setSelUnits]     = useState(() => new Set());
 
   const navigate = useNavigate();
 
-  // 1) Fetch inițial: toate evaluările
+  // --- fetch inițial
   useEffect(() => {
     let alive = true;
     (async () => {
       setLoading(true);
       try {
-        const { data } = await api.get("/api/topics"); // fără q
-        const list = Array.isArray(data) ? data : data.data ?? [];
+        const { data } = await api.get("/api/topics");
+        const list = Array.isArray(data) ? data : (data?.data ?? []);
         if (alive) {
           setAllRows(list);
-          setRows(list); // arătăm „toate” la început
+          setRows(list);
         }
-      } finally {
+      } catch {/* ignore */} 
+      finally {
         if (alive) setLoading(false);
       }
     })();
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, []);
 
-  // 2) Căutare doar când q.length ≥ 6; altfel revii la allRows
+  // --- căutare (debounced, abortable)
+  const debounceRef = useRef(null);
   useEffect(() => {
-    const term = q.trim();
+    const term = deferredQ.trim();
 
-    // caz: 1..5 caractere → nu căuta, arată „toate”
     if (term !== "" && term.length < MIN_CHARS) {
       setTooShort(true);
       setRows(allRows);
-      return; // fără request
+      return;
     }
     setTooShort(false);
 
-    // caz: șir gol → toate
     if (term === "") {
       setRows(allRows);
       return;
     }
 
-    // caz: term.length ≥ 6 → căutare în content (backend)
     let alive = true;
     const ctrl = new AbortController();
-    const t = setTimeout(async () => {
+
+    // debounce stabil (nu recreăm funcția)
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
         const { data } = await api.get("/api/topics", {
           params: { q: term },
           signal: ctrl.signal,
         });
-        const list = Array.isArray(data) ? data : data.data ?? [];
+        const list = Array.isArray(data) ? data : (data?.data ?? []);
         if (alive) setRows(list);
-      } catch (_) {
-        /* ignore */
-      } finally {
+      } catch {/* ignore */} 
+      finally {
         if (alive) setLoading(false);
       }
-    }, 300); // debounce
+    }, 300);
 
     return () => {
       alive = false;
-      clearTimeout(t);
+      clearTimeout(debounceRef.current);
       ctrl.abort();
     };
-  }, [q, allRows]);
+  }, [deferredQ, allRows]);
 
-  const domainOptions = useMemo(() => {
-    return [...new Set(rows.map(domainOf).filter(Boolean))].sort(roCmp);
-  }, [rows]);
-
-  const unitsByDomain = useMemo(() => {
+  // --- derive: domenii & unități (din rows curente)
+  const { domainOptions, unitsByDomain } = useMemo(() => {
+    // Map domeniu -> Set(unități)
     const map = new Map();
     for (const t of rows) {
       const d = domainOf(t);
       const u = unitOf(t);
-      if (!d || !u) continue;
+      if (!d) continue;
       if (!map.has(d)) map.set(d, new Set());
-      map.get(d).add(u);
+      if (u) map.get(d).add(u);
     }
-    return map;
+    // array stabil pentru domenii (alfabetic pentru UX previzibil, schimbă la nevoie)
+    const doms = Array.from(map.keys()).sort((a, b) =>
+      String(a).localeCompare(String(b), "ro")
+    );
+    return { domainOptions: doms, unitsByDomain: map };
   }, [rows]);
 
-  const toggleIn = (setter) => (value) =>
-    setter((prev) => {
+  // --- handlere stabile (nu mai recreează funcții la fiecare render)
+  const onSearchChange = useCallback((e) => setQ(e.target.value), []);
+  const onOpenCard = useCallback((e) => {
+    const id = e.currentTarget?.dataset?.id;
+    if (id) navigate(`/topics/${id}`);
+  }, [navigate]);
+
+  const toggleIn = useCallback((setter, value) => {
+    setter(prev => {
       const next = new Set(prev);
       next.has(value) ? next.delete(value) : next.add(value);
       return next;
     });
-
-  const clearFilters = () => {
+  }, []);
+  const clearFilters = useCallback(() => {
     setSelDomains(new Set());
     setSelUnits(new Set());
-  };
+  }, []);
 
-  // 5) Când se schimbă domeniile, păstrează doar unitățile valide
+  // --- sincronizare selecții când se schimbă domeniile/unitățile valide
   useEffect(() => {
     if (!selDomains.size) return;
     setSelUnits((prev) => {
       const keep = new Set();
       for (const u of prev) {
         for (const d of selDomains) {
-          const units = unitsByDomain.get(d);
-          if (units?.has(u)) {
-            keep.add(u);
-            break;
-          }
+          const setU = unitsByDomain.get(d);
+          if (setU?.has(u)) { keep.add(u); break; }
         }
       }
       return keep;
     });
   }, [selDomains, unitsByDomain]);
 
-  // 6) Dacă se schimbă rows (după căutare), prune selecția invalidă
   useEffect(() => {
-    setSelDomains((prev) => {
+    // prune domenii invalide
+    setSelDomains(prev => {
       if (!prev.size) return prev;
       const valid = new Set(domainOptions);
       const keep = new Set();
       for (const d of prev) if (valid.has(d)) keep.add(d);
       return keep;
     });
-    setSelUnits((prev) => {
+    // prune unități invalide
+    setSelUnits(prev => {
       if (!prev.size) return prev;
       const allValid = new Set();
       for (const d of domainOptions) {
-        for (const u of unitsByDomain.get(d) ?? []) {
-          allValid.add(u);
-        }
+        const setU = unitsByDomain.get(d);
+        if (setU) for (const u of setU) allValid.add(u);
       }
       const keep = new Set();
       for (const u of prev) if (allValid.has(u)) keep.add(u);
@@ -160,18 +193,21 @@ export default function ListTopics() {
     });
   }, [rows, domainOptions, unitsByDomain]);
 
-  // 7) Filtrarea locală Domain/Unit peste rows (fără bySearch pe q!)
+  // --- filtrarea locală (memoizată)
   const filtered = useMemo(() => {
+    const byDomainActive = selDomains.size > 0;
+    const byUnitActive   = selUnits.size > 0;
+
+    if (!byDomainActive && !byUnitActive) return rows;
+
     return rows.filter((t) => {
       const d = domainOf(t);
       const u = unitOf(t);
-      const byDomain = selDomains.size ? selDomains.has(d) : true;
-      const byUnit = selUnits.size ? selUnits.has(u) : true;
-      return byDomain && byUnit;
+      const okD = byDomainActive ? selDomains.has(d) : true;
+      const okU = byUnitActive   ? selUnits.has(u)   : true;
+      return okD && okU;
     });
   }, [rows, selDomains, selUnits]);
-
-  console.log(filtered);
 
   return (
     <div className="page-bg">
@@ -179,13 +215,11 @@ export default function ListTopics() {
         <h1 className="page-title">Temele pentru BAC: teorie și aplicații</h1>
 
         <div className="layout">
-          {/* ASIDE stânga */}
+          {/* ASIDE */}
           <aside className="filters" aria-label="Filtre">
             <div className="filters-head">
               <h2>Filtre</h2>
-              <button className="link-btn" onClick={clearFilters}>
-                Resetează
-              </button>
+              <button className="link-btn" onClick={clearFilters}>Resetează</button>
             </div>
 
             <div className="row">
@@ -193,24 +227,28 @@ export default function ListTopics() {
               <ul className="domains-list">
                 {domainOptions.map((d) => {
                   const active = selDomains.has(d);
-                  const units = [...(unitsByDomain.get(d) ?? [])].sort(roCmp);
+                  const unitsSet = unitsByDomain.get(d);
+                  const units = unitsSet ? Array.from(unitsSet).sort((a, b) =>
+                    String(a).localeCompare(String(b), "ro")
+                  ) : [];
+
                   return (
                     <li key={d} className="domain-item">
                       <button
                         className={`chip ${active ? "active" : ""}`}
-                        onClick={() => toggleIn(setSelDomains)(d)}
+                        onClick={() => toggleIn(setSelDomains, d)}
                         aria-expanded={active}
                       >
                         {d}
                       </button>
 
-                      {active && !!units.length && (
+                      {active && units.length > 0 && (
                         <div className="units-row">
                           {units.map((u) => (
                             <button
                               key={u}
                               className={`chip small ${selUnits.has(u) ? "active" : ""}`}
-                              onClick={() => toggleIn(setSelUnits)(u)}
+                              onClick={() => toggleIn(setSelUnits, u)}
                             >
                               {u}
                             </button>
@@ -224,18 +262,18 @@ export default function ListTopics() {
             </div>
           </aside>
 
-          {/* CONȚINUT dreapta */}
+          {/* CONȚINUT */}
           <main>
             <div className="cc-searchbar">
               <input
                 className="cc-search"
                 placeholder="Caută după conținut…"
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={onSearchChange}
               />
               {tooShort && (
                 <div className="muted" style={{ marginTop: 6 }}>
-                  Introdu cel puțin 6 caractere pentru a porni căutarea.
+                  Introdu cel puțin {MIN_CHARS} caractere pentru a porni căutarea.
                 </div>
               )}
             </div>
@@ -247,37 +285,9 @@ export default function ListTopics() {
                 ))}
               </div>
             ) : (
-              <div className="cc-grid">
+              <div className="cc-grid" style={{ contentVisibility: "auto", containIntrinsicSize: "1200px" }}>
                 {filtered.map((r) => (
-                  <div className="cc-card-wrap" key={r.id}>
-                    <article
-                      className="cc-card"
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => navigate(`/topics/${r.id}`)}
-                      onKeyDown={(e) =>
-                        (e.key === "Enter" || e.key === " ") &&
-                        navigate(`/topics/${r.id}`)
-                      }
-                    >
-                      <div className="cc-ribbon">
-                        {STATUS_TEXT[r.status] ?? "Public"}
-                      </div>
-                      <div className="cc-body">
-                        <h3 className="cc-title">{r.name ?? "Fără titlu"}</h3>
-                        <p className="cc-desc">
-                          {r.profil
-                            ? `Profil ${r.profil}.`
-                            : "Profil real, umanist"}
-                        </p>
-                        <div className="cc-divider" />
-                        <div className="cc-foot">
-                          <span className="cc-left">{r.year ?? "—"}</span>
-                          <span className="cc-right">{r.type ?? "—"}</span>
-                        </div>
-                      </div>
-                    </article>
-                  </div>
+                  <TopicCard key={r.id} r={r} onOpen={onOpenCard} />
                 ))}
               </div>
             )}
@@ -285,32 +295,5 @@ export default function ListTopics() {
         </div>
       </div>
     </div>
-  );
-}
-
-/* mic component pentru grup de checkbox-uri */
-function FilterGroup({ title, options, selected, onToggle }) {
-  return (
-    <section className="filter-group">
-      <h3>{title}</h3>
-      <div className="checklist">
-        {options.length === 0 && <div className="muted">—</div>}
-        {options.map((opt) => {
-          const val = String(opt);
-          const id = `${title}-${val}`;
-          return (
-            <label key={id} htmlFor={id} className="chk">
-              <input
-                id={id}
-                type="checkbox"
-                checked={selected.has(val)}
-                onChange={() => onToggle(val)}
-              />
-              <span>{val}</span>
-            </label>
-          );
-        })}
-      </div>
-    </section>
   );
 }
