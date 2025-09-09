@@ -1,10 +1,26 @@
 // src/pages/Topic.jsx
-import { useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../routes/api";
 import YouTubeLite from "./YouTubeLite";
+import VideoBreakpoints from './VideoBreakpoints';
+import Presentation from "./Presentation";
 import "./Topic.css"
 
+const toEmbedUrl = (u) => {
+  try {
+    const url = new URL(u);
+    if (url.hostname.includes("youtu.be")) {
+      const id = url.pathname.slice(1);
+      return `https://www.youtube.com/embed/${id}`;
+    }
+    const id = url.searchParams.get("v");
+    if (id) return `https://www.youtube.com/embed/${id}`;
+    return u;
+  } catch {
+    return u;
+  }
+};
 
 export default function Topic() {
   const { id } = useParams();
@@ -13,6 +29,39 @@ export default function Topic() {
   const [row, setRow] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
+
+  // refs per video-card (figure). Căutăm iframe-ul randat de YouTubeLite.
+  const wrapperRefs = useRef({});
+
+  const handleBreakpointClick = (videoId, seconds) => {
+    const wrapper = wrapperRefs.current[videoId];
+    const iframe = wrapper?.querySelector("iframe");
+    if (!iframe) return; // probabil încă nu a fost inițializat playerul
+
+    // păstrăm baza pentru a nu concatena parametrii la infinit
+    const base =
+      iframe.dataset.baseSrc || toEmbedUrl(iframe.src || "");
+    iframe.dataset.baseSrc = base;
+
+    const sep = base.includes("?") ? "&" : "?";
+    iframe.src =
+      `${base}${sep}start=${seconds}&autoplay=1&enablejsapi=1`;
+
+    const postPause = () => {
+      iframe.contentWindow?.postMessage(
+        JSON.stringify({
+          event: "command",
+          func: "pauseVideo",
+          args: [],
+        }),
+        "*"
+      );
+    };
+
+    // după reîncărcarea src-ului, încercăm să punem pe pauză
+    iframe.addEventListener("load", postPause, { once: true });
+    setTimeout(postPause, 600);
+  };
 
   useEffect(() => {
     let alive = true;
@@ -26,8 +75,9 @@ export default function Topic() {
         const { data } = await api.get(`/api/topics/${id}`, {
           signal: ctrl.signal,
           params: {
-            include_videos: 1,          // sau true, dar 1/0 e mai sigur
-            include_presentations: 1,   // idem
+            include_videos: 1,          
+            include_presentations: 1,   
+            include_breakpoints: 1,
           },
         });
         if (alive) setRow(data);
@@ -65,6 +115,13 @@ export default function Topic() {
       : apiBase + (row?.cover_url || ''))
     || (apiBase + '/storage/' + (row?.path || '')); // fallback
 
+  const toAbsoluteStorageUrl = (p) => {
+    if (!p) return "";
+    if (p.startsWith("http")) return p;
+    if (p.startsWith("/")) return apiBase + p;
+    return apiBase + "/storage/" + p;
+  };
+
   console.log(row)
 
   return (
@@ -101,9 +158,40 @@ export default function Topic() {
           <h2>Videouri</h2>
           <div className="video-grid">
             {row.videos.map(v => (
-              <figure key={v.id} className="video-card">
+              <figure
+                key={v.id}
+                className="video-card"
+                ref={(el) => {
+                  wrapperRefs.current[v.id] = el;
+                }}
+              >
                 <YouTubeLite src={v.source} title={v.title} />
-                <figcaption className="video-title">{v.title}</figcaption>
+                <VideoBreakpoints
+                  breakpoints={v.breakpoints || []}
+                  onBreakpointClick={(s) =>
+                    handleBreakpointClick(v.id, s)
+                  }
+                />
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
+      {(row?.presentations ?? []).length > 0 && (
+        <section className="presentations">
+          <h2>Prezentări</h2>
+          <div className="presentations-grid">
+            {row.presentations.map((p) => (
+              <figure key={p.id} className="presentation-card">
+                <Presentation
+                  source={toAbsoluteStorageUrl(p.path)}
+                  title={p.name}
+                />
+                {/* {p?.content_text && (
+                  <figcaption className="presentation-notes">
+                    {p.content_text}
+                  </figcaption>
+                )} */}
               </figure>
             ))}
           </div>

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ListEvaluation from "./components/ListEvaluation";
 import Topic from "./components/Topic";
+import Home from "./pages/Home"
 import ListTopics from "./components/ListTopics";
 import Evaluation from "./components/Evaluation";
 
@@ -9,7 +10,10 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         {/* <Route path="/" element={<ListEvaluation />} /> */}
-        <Route path="/" element={<ListTopics />} />
+        <Route path="/" element={<Home/>} />
+        <Route path="/discipline/romana/evaluari" element={<ListEvaluation/>} />
+        <Route path="/discipline/romana/teme"     element={<ListTopics/>} />
+        {/* <Route path="/" element={<ListTopics />} /> */}
         <Route path="/topics/:id" element={<Topic />} />
         <Route path="/evaluations/:id" element={<Evaluation />} />
       </Routes>
