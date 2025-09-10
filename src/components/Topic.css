@@ -197,6 +197,7 @@ body {background-color: var(--bg-page);}
   outline: 1px solid rgba(0, 0, 0, .06);
   transition: transform .18s ease, box-shadow .18s ease,
               outline-color .18s ease;
+  content-visibility: auto; contain-intrinsic-size: 400px 225px;
 }
 
 .presentation-card:hover,

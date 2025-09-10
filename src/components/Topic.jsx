@@ -4,7 +4,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../routes/api";
 import YouTubeLite from "./YouTubeLite";
 import VideoBreakpoints from './VideoBreakpoints';
+import PresentationLite from "./PresentationLite";
 import Presentation from "./Presentation";
+import Flashcards from "./Flashcards";
 import "./Topic.css"
 
 const toEmbedUrl = (u) => {
@@ -124,6 +126,26 @@ export default function Topic() {
 
   console.log(row)
 
+  const cards = [
+  {
+    id: 1,
+    front: "Which SQL statement returns the number of customers in each city?",
+    back:
+      "SELECT city, COUNT(*) AS customers\\nFROM Customers\\nGROUP BY city;",
+  },
+  {
+    id: 2,
+    front: "What does GROUP BY do?",
+    back:
+      "It aggregates rows by the listed column(s) so you can apply functions\nlike COUNT(), SUM(), AVG(), etc. to each group.",
+  },
+  {
+    id: 3,
+    front: "How to limit to the first 10 rows in SQL Server?",
+    back: "SELECT TOP (10) * FROM SomeTable;",
+  },
+  ];
+
   return (
     <div className="page topic-page" style={{ padding: 16, maxWidth: 900, margin: "0 auto 72px" }}>
       <header className="topic-head" style={{ marginBottom: 16 }}>
@@ -137,7 +159,6 @@ export default function Topic() {
             width={72}
             height={72}
             style={{ width:72, height:72, borderRadius:'50%', objectFit:'cover' }}
-            onError={(e) => { e.currentTarget.src = '/images/topic-fallback.png'; }}
           />
           <h1 style={{ margin: 0 }}>{row.name ?? "Fără titlu"}</h1>
         </div>
@@ -177,26 +198,29 @@ export default function Topic() {
           </div>
         </section>
       )}
-      {(row?.presentations ?? []).length > 0 && (
+      {/* {(row?.presentations ?? []).length > 0 && (
         <section className="presentations">
           <h2>Prezentări</h2>
           <div className="presentations-grid">
             {row.presentations.map((p) => (
               <figure key={p.id} className="presentation-card">
-                <Presentation
-                  source={toAbsoluteStorageUrl(p.path)}
+                <PresentationLite
+                  src={p.path}
                   title={p.name}
+                  poster={toAbsoluteStorageUrl(p.thumbnail_url)}   
+                  autoloadOnView={false} 
                 />
-                {/* {p?.content_text && (
+                {p?.content_text && (
                   <figcaption className="presentation-notes">
                     {p.content_text}
                   </figcaption>
-                )} */}
+                )}
               </figure>
             ))}
           </div>
         </section>
-      )}
+      )} */}
+      <Flashcards cards={cards} />
     </div>
   );
 }
