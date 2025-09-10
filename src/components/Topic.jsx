@@ -78,8 +78,9 @@ export default function Topic() {
           signal: ctrl.signal,
           params: {
             include_videos: 1,          
-            include_presentations: 1,   
+            include_presentations: 0,   
             include_breakpoints: 1,
+            include_flip_cards: 1
           },
         });
         if (alive) setRow(data);
@@ -126,25 +127,13 @@ export default function Topic() {
 
   console.log(row)
 
-  const cards = [
-  {
-    id: 1,
-    front: "Which SQL statement returns the number of customers in each city?",
-    back:
-      "SELECT city, COUNT(*) AS customers\\nFROM Customers\\nGROUP BY city;",
-  },
-  {
-    id: 2,
-    front: "What does GROUP BY do?",
-    back:
-      "It aggregates rows by the listed column(s) so you can apply functions\nlike COUNT(), SUM(), AVG(), etc. to each group.",
-  },
-  {
-    id: 3,
-    front: "How to limit to the first 10 rows in SQL Server?",
-    back: "SELECT TOP (10) * FROM SomeTable;",
-  },
-  ];
+  const cards = (row?.flip_cards ?? row?.flipCards ?? []).map((fc, i) => {
+    const front = fc.task;
+    const back  = fc.answer;
+    console.log('[flipcard]', i, { id: fc.id, fc, front, back });
+    return { id: fc.id, front, back };
+  });
+
 
   return (
     <div className="page topic-page" style={{ padding: 16, maxWidth: 900, margin: "0 auto 72px" }}>
@@ -198,29 +187,12 @@ export default function Topic() {
           </div>
         </section>
       )}
-      {/* {(row?.presentations ?? []).length > 0 && (
-        <section className="presentations">
-          <h2>Prezentări</h2>
-          <div className="presentations-grid">
-            {row.presentations.map((p) => (
-              <figure key={p.id} className="presentation-card">
-                <PresentationLite
-                  src={p.path}
-                  title={p.name}
-                  poster={toAbsoluteStorageUrl(p.thumbnail_url)}   
-                  autoloadOnView={false} 
-                />
-                {p?.content_text && (
-                  <figcaption className="presentation-notes">
-                    {p.content_text}
-                  </figcaption>
-                )}
-              </figure>
-            ))}
-          </div>
+      {cards.length > 0 && (
+        <section className="flipcards">
+          <h2>Flashcards</h2>
+          <Flashcards cards={cards} />
         </section>
-      )} */}
-      <Flashcards cards={cards} />
+      )}
     </div>
   );
 }

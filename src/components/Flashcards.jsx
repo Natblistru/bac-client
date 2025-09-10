@@ -1,57 +1,57 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 
-const DEMO = [
-  {
-    id: 1,
-    front: "Which SQL statement returns the number of customers in each city?",
-    back: "SELECT city, COUNT(*) AS customers\\nFROM Customers\\nGROUP BY city;",
-  },
-  {
-    id: 2,
-    front: "What does GROUP BY do?",
-    back: "It aggregates rows by the listed column(s) so you can apply functions\nlike COUNT(), SUM(), AVG(), etc. to each group.",
-  },
-  {
-    id: 3,
-    front: "How to limit to the first 10 rows in SQL Server?",
-    back: "SELECT TOP (10) * FROM SomeTable;",
-  },
-];
-
-export default function Flashcards({ cards = DEMO }) {
+export default function Flashcards({ cards }) {
   const [deck, setDeck] = useState(() => [...cards]);
   const [flipped, setFlipped] = useState(false);
   const [hover, setHover] = useState(null); // 'know' | 'dont' | null
   const [anim, setAnim] = useState(null); // 'left' | 'back' | null
 
-  // const [knownCount, setKnownCount] = useState(0);
-  // const [dontCount, setDontCount] = useState(0);
-  // const [seenIds, setSeenIds] = useState(() => new Set());
   const [status, setStatus] = useState(() => ({})); // { [cardId]: 'known' | 'dont' }
 
+  useEffect(() => {
+    setDeck([...cards]);
+    setStatus({});
+    setFlipped(false);
+    setHover(null);
+    setAnim(null);
+  }, [cards]);
+
+  // helpers pentru HTML din backend
+  const toHtml = (val) => {
+    console.log(val)
+    if (!val) return "";
+    if (typeof val === "string") return val;
+    if (typeof val.html === "string") return val.html;
+    if (Array.isArray(val)) {
+      return val
+        .map((b) =>
+          typeof b === "string"
+            ? b
+            : (b?.data?.text ?? b?.text ?? b?.content ?? "")
+        )
+        .filter(Boolean)
+        .join("\n");
+    }
+    if (typeof val === "object") {
+      return val.data?.text ?? val.text ?? "";
+    }
+    return String(val ?? "");
+  };
 
   const topCard = deck[0];
   const total = cards.length;
 
-const { knownCount, dontCount, uniqueAnswered } = useMemo(() => {
-  let k = 0, d = 0;
-  for (const v of Object.values(status)) {
-    if (v === 'known') k++;
-    else if (v === 'dont') d++;
-  }
-  return { knownCount: k, dontCount: d, uniqueAnswered: k + d };
-}, [status]);
+  const { knownCount, dontCount, uniqueAnswered } = useMemo(() => {
+    let k = 0, d = 0;
+    for (const v of Object.values(status)) {
+      if (v === 'known') k++;
+      else if (v === 'dont') d++;
+    }
+    return { knownCount: k, dontCount: d, uniqueAnswered: k + d };
+  }, [status]);
 
-const progressPct = (knownCount / Math.max(total, 1)) * 100;
+  const progressPct = (knownCount / Math.max(total, 1)) * 100;
 
-
-  // function markSeen(id) {
-  //   setSeenIds((prev) => {
-  //     const next = new Set(prev);
-  //     next.add(id);
-  //     return next;
-  //   });
-  // }
 
   function flip() {
     if (!topCard || anim) return;
@@ -94,6 +94,14 @@ const progressPct = (knownCount / Math.max(total, 1)) * 100;
     setFlipped(false);
   }
 
+  function handleRestart() {
+    setDeck(() => [...cards]); // sau păstrează un ref cu lista inițială dacă vrei exact snapshot-ul inițial
+    setStatus({});             // << reset etichetări (known/dont)
+    setFlipped(false);
+    setHover(null);
+    setAnim(null);
+}
+
   // simple stacked preview (top 3)
   const visibleStack = useMemo(() => deck.slice(0, 3), [deck]);
 
@@ -130,9 +138,10 @@ const progressPct = (knownCount / Math.max(total, 1)) * 100;
             >
               <div className={innerCls}>
                 <div className="fc-face fc-front">
-                  <div className="fc-content">
-                    <p>{card.front}</p>
-                  </div>
+                  <div
+                    className="fc-content"
+                    dangerouslySetInnerHTML={{ __html: toHtml(card.front) }}
+                  />
 
                   <button
                     aria-label="Flip card"
@@ -144,8 +153,17 @@ const progressPct = (knownCount / Math.max(total, 1)) * 100;
                 </div>
 
                 <div className="fc-face fc-back">
-                  <div className="fc-content">
-                    <pre className="answer-pre">{card.back}</pre>
+                  <div className="fc-content-wrap">
+
+                    <div
+                      className="fc-question-mini"
+                      dangerouslySetInnerHTML={{ __html: toHtml(card.front) }}
+                    />
+
+                    <div
+                      className="fc-content answer-html"
+                      dangerouslySetInnerHTML={{ __html: toHtml(card.back) }}
+                    />
                   </div>
 
                   <button
@@ -171,11 +189,13 @@ const progressPct = (knownCount / Math.max(total, 1)) * 100;
 
         {deck.length === 0 && (
           <div className="fc-empty">
-            <h3>All done! 🎉</h3>
+            <h3>Felicitari! 🎉</h3>
             <p>
-              You marked <strong>{knownCount}</strong> as known and{" "}
-              <strong>{dontCount}</strong> as not known.
+              Ai invațat inca <strong>{knownCount}</strong> noțiuni noi.
             </p>
+            <button type="button" className="fc-restart" onClick={handleRestart}>
+              Restart Flashcards
+            </button>
           </div>
         )}
       </div>
@@ -205,8 +225,8 @@ const progressPct = (knownCount / Math.max(total, 1)) * 100;
 
       {/* Bottom row: counters + centered progress bar */}
       <div className="fc-bottom">
-        <div class="corner corner-left">
-          <span class="corner-content">
+        <div className="corner corner-left">
+          <span className="corner-content">
             <svg
               width="13"
               height="13"
@@ -215,8 +235,8 @@ const progressPct = (knownCount / Math.max(total, 1)) * 100;
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                fill-rule="evenodd"
-                clip-rule="evenodd"
+                fillRule="evenodd"
+                clipRule="evenodd"
                 d="M16 1.29918L14.7008 0L8 6.70082L1.29918 0L0 1.29918L6.70082 8L0 14.7008L1.29918 16L8 9.3001L14.7008 16L16 14.7008L9.29918 8L16 1.29918Z"
                 fill="#333333"
               ></path>
@@ -232,8 +252,8 @@ const progressPct = (knownCount / Math.max(total, 1)) * 100;
             <div className="bar-fill" style={{ width: `${progressPct}%` }} />
           </div>
         </div>
-        <div class="corner corner-right">
-          <span class="corner-content">
+        <div className="corner corner-right">
+          <span className="corner-content">
             <svg
               width="13"
               height="11"
@@ -276,7 +296,7 @@ const CSS = `
 /* ---- Layout ---- */
 .fc-root {
   --card-w: clamp(260px, 60vw, 640px);
-  --card-h: clamp(220px, 42vh, 420px);
+  --card-h: clamp(420px, 42vh, 420px);
   --radius: 16px;
   --shadow: 0 10px 28px rgba(0,0,0,.08);
   --shadow-strong: 0 16px 44px rgba(0,0,0,.16);
@@ -362,8 +382,8 @@ const CSS = `
 .tilt-left  { transform: rotateY(var(--ry,0)) rotateZ(-6deg); }
 
 /* Show proper label while hovering buttons */
-.fc-card.tilt-right .fc-hover-labels .label-know { opacity: .95; }
-.fc-card.tilt-left  .fc-hover-labels .label-dont { opacity: .95; }
+.fc-card:not(.is-flipped).tilt-right .fc-hover-labels .label-know { opacity: .95; }
+.fc-card:not(.is-flipped).tilt-left  .fc-hover-labels .label-dont { opacity: .95; }
 
 /* Leave deck animations */
 @keyframes swipeLeft { to { transform: translateX(-130%) rotateZ(-12deg); opacity:0; } }
@@ -398,8 +418,6 @@ const CSS = `
   margin-top: 12px;
 }
  .fc-bottom .corner { font-weight: 700; font-size: 14px; opacity: .9; }
-// .fc-bottom .corner-left { justify-self: start; }
-// .fc-bottom .corner-right { justify-self: end; }
 
 .fc-bottom .corner-left, .fc-bottom .corner-right {
   width: 64px;
@@ -433,4 +451,44 @@ const CSS = `
 /* Empty state */
 .fc-empty { width: var(--card-w); text-align: center; margin-top: 24px; }
 .fc-empty h3 { margin: 0 0 6px; }
+
+/* Restart button */
+.fc-restart {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(0,0,0,.08);
+  background: linear-gradient(90deg, #60a5fa, #22c55e);
+  color: white;
+}
+.fc-restart:hover { transform: translateY(-1px); }
+
+.fc-back .fc-content-wrap{
+  width: 90%;
+  max-height: calc(var(--card-h) - 120px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  text-align: center;
+}
+
+/* întrebarea mică, sus */
+.fc-question-mini{
+  font-size: 14px;
+  line-height: 1.35;
+  color: #64748b;          /* gri discret */
+}
+
+/* răspunsul (deja aveai .answer-html; o întărim puțin) */
+.fc-back .answer-html{
+  width: 100%;
+  text-align: left;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
 `;
