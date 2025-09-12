@@ -236,3 +236,74 @@ body {background-color: var(--bg-page);}
   }
 }
 
+
+
+/* --- Subtopics Accordion --- */
+.subtopics { margin-top: 28px; }
+.subtopics h2 { margin: 0 0 12px; }
+
+.accordion {
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+/* fiecare item */
+.acc-item {
+  border-bottom: 1px solid #e5e7eb;
+}
+.acc-item:last-child { border-bottom: none; }
+
+/* ascunde markerul default al <summary> */
+.acc-summary::-webkit-details-marker { display: none; }
+.acc-summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #111827;
+}
+
+.acc-title { font-weight: 600; }
+.acc-right { display: inline-flex; align-items: center; gap: 10px; }
+.acc-meta {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+.acc-chevron {
+  transition: transform .2s ease;
+  color: #374151;
+}
+
+/* rotește săgeata când e deschis */
+.acc-item[open] .acc-chevron { transform: rotate(180deg); }
+
+.acc-panel {
+  padding: 12px 16px 16px;
+  background: #fff;
+}
+
+/* listările interne */
+.acc-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.acc-li { padding: 8px 0; border-bottom: 1px dashed #e5e7eb; }
+.acc-li:last-child { border-bottom: none; }
+
+.acc-item-title { font-weight: 600; color: #111827; margin-bottom: 6px; }
+.acc-questions { margin: 0; padding-left: 18px; color: #374151; }
+.acc-q { margin: 2px 0; }
+
+.acc-empty { margin: 0; color: #6b7280; font-style: italic; }
+
+

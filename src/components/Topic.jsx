@@ -4,8 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../routes/api";
 import YouTubeLite from "./YouTubeLite";
 import VideoBreakpoints from './VideoBreakpoints';
-import PresentationLite from "./PresentationLite";
-import Presentation from "./Presentation";
+import EvalItemsSlider from "./EvalItemsSlider"
 import Flashcards from "./Flashcards";
 import "./Topic.css"
 
@@ -80,7 +79,8 @@ export default function Topic() {
             include_videos: 1,          
             include_presentations: 0,   
             include_breakpoints: 1,
-            include_flip_cards: 1
+            include_flip_cards: 1,
+            include_subtopics: 1,       
           },
         });
         if (alive) setRow(data);
@@ -118,13 +118,6 @@ export default function Topic() {
       : apiBase + (row?.cover_url || ''))
     || (apiBase + '/storage/' + (row?.path || '')); // fallback
 
-  const toAbsoluteStorageUrl = (p) => {
-    if (!p) return "";
-    if (p.startsWith("http")) return p;
-    if (p.startsWith("/")) return apiBase + p;
-    return apiBase + "/storage/" + p;
-  };
-
   console.log(row)
 
   const cards = (row?.flip_cards ?? row?.flipCards ?? []).map((fc, i) => {
@@ -134,6 +127,13 @@ export default function Topic() {
     return { id: fc.id, front, back };
   });
 
+  function Chevron() {
+    return (
+      <svg className="acc-chevron" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8.12 9.29L12 13.17l3.88-3.88 1.41 1.41L12 16l-5.29-5.29z" fill="currentColor"/>
+      </svg>
+    );
+  }
 
   return (
     <div className="page topic-page" style={{ padding: 16, maxWidth: 900, margin: "0 auto 72px" }}>
@@ -191,6 +191,39 @@ export default function Topic() {
         <section className="flipcards">
           <h2>Flashcards</h2>
           <Flashcards cards={cards} />
+        </section>
+      )}
+
+      {(row?.subtopics ?? []).length > 0 && (
+        <section className="subtopics">
+          <h2>Sarcini de evaluare</h2>
+
+          <div className="accordion">
+            {(row.subtopics ?? []).map((st) => (
+              <details key={st.id} className="acc-item">
+                <summary className="acc-summary">
+                  <span className="acc-title">{st.name}</span>
+                  <span className="acc-right">
+                    {!!st.evaluation_items_count && (
+                      <span className="acc-meta">
+                        {st.evaluation_items_count} iteme
+                      </span>
+                    )}
+                    <Chevron />
+                  </span>
+                </summary>
+
+                <div className="acc-panel">
+                  {(st.evaluation_items ?? []).length > 0 ? (
+                    <EvalItemsSlider items={st.evaluation_items} />
+                  ) : (
+                    <p className="acc-empty">Nu sunt elemente pentru acest subtopic.</p>
+                  )}
+
+                </div>
+              </details>
+            ))}
+          </div>
         </section>
       )}
     </div>

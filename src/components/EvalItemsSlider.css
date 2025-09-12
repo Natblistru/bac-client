@@ -1,0 +1,71 @@
+
+.subslider { position: relative; margin-top: 8px; }
+
+.subslider-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  gap: 0;
+  padding: 0;                 
+  scrollbar-gutter: stable both-edges;          /* evită saltul layoutului când apare scrollbarul */
+  scrollbar-width: thin;                        /* Firefox */
+  scrollbar-color: rgba(148,163,184,.55) transparent; /* Firefox: thumb / track */
+  overscroll-behavior-x: contain;               /* nu „trage” pagina la capete */
+}
+
+.subslider-track::-webkit-scrollbar { height: 6px; }
+.subslider-track::-webkit-scrollbar-track{
+  background: transparent;                      /* fără fundal masiv */
+}
+.subslider-track::-webkit-scrollbar-thumb{
+  background-color: rgba(148,163,184,.55);      /* #94a3b8 */
+  border-radius: 999px;                          /* „pills” */
+  border: 2px solid transparent;                 /* padding optic */
+  background-clip: padding-box;
+}
+.subslider-track::-webkit-scrollbar-thumb:hover{
+  background-color: rgba(100,116,139,.75);      /* #64748b */
+}
+.subslider-track::-webkit-scrollbar-thumb:active{
+  background-color: rgba(71,85,105,.85);        /* #475569 */
+}
+
+/* opțional: afișează scrollbarul doar când utilizatorul e „pe” slider (Chrome/WebKit) */
+.subslider:not(:hover) .subslider-track::-webkit-scrollbar{
+  height: 0;                                    /* ascuns discret */
+}
+
+/* 1 slide = exact viewportul track-ului */
+.subslide {
+  flex: 0 0 100%;
+  max-width: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;   
+}
+
+.subslide-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 6px 14px rgba(0,0,0,.04);
+  margin: 0 12px;             
+  padding: 12px 14px;
+}
+
+.subslide-meta {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.subslider-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 34px; height: 34px; border-radius: 999px;
+  border: 1px solid #e5e7eb; background: #fff;
+  box-shadow: 0 6px 16px rgba(0,0,0,.08);
+  display: grid; place-items: center; cursor: pointer;
+}
+.subslider-nav.prev { left: -6px; }
+.subslider-nav.next { right: -6px; }
+.subslider-nav:disabled { opacity: .4; cursor: default; }

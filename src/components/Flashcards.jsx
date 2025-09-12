@@ -386,10 +386,10 @@ const CSS = `
 .fc-card:not(.is-flipped).tilt-left  .fc-hover-labels .label-dont { opacity: .95; }
 
 /* Leave deck animations */
-@keyframes swipeLeft { to { transform: translateX(-130%) rotateZ(-12deg); opacity:0; } }
+@keyframes swipeRight { to { transform: translateX(130%) rotateZ(12deg); opacity:0; } }
 @keyframes sendBack  { to { transform: translateY(36px) scale(.92); opacity:.8; } }
 
-.animate-left { animation: swipeLeft .42s ease forwards; }
+.animate-left { animation: swipeRight .42s ease forwards; }
 .animate-back { animation: sendBack .42s ease forwards; }
 
 /* Controls */
