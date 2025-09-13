@@ -144,7 +144,7 @@ export default function Topic() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <img
             src={coverSrc}
-            alt={row?.name ?? 'Copertă topic'}
+            alt={'Imagine topic'}
             width={72}
             height={72}
             style={{ width:72, height:72, borderRadius:'50%', objectFit:'cover' }}
