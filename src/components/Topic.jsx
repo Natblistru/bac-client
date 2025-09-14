@@ -138,9 +138,18 @@ export default function Topic() {
   return (
     <div className="page topic-page" style={{ padding: 16, maxWidth: 900, margin: "0 auto 72px" }}>
       <header className="topic-head" style={{ marginBottom: 16 }}>
+        <div style={{display: "flex",justifyContent: "space-around"}}>
         <button onClick={() => navigate(-1)} className="btn-back" style={{ marginBottom: 8 }}>
           &larr; Înapoi
         </button>
+        <button
+            type="button"
+            className="home-btn"
+            onClick={() => navigate("/")}
+          >
+            Home
+          </button>
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <img
             src={coverSrc}

@@ -18,7 +18,10 @@ body { margin: 0; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; c
   padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--border);
 }
 .topbar h1 { font-size: 20px; margin: 0; }
-.progress { font-size: 14px; color: #555; }
+.progress {
+  display: flex;
+  align-items: center;
+}
 
 /* Stânga: articol */
 .left {
@@ -240,4 +243,59 @@ body { margin: 0; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; c
   color: #6b7280;
   margin-top: 4px;
 }
+
+.home-btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+
+  padding: .5rem .9rem;
+  min-height: 2.25rem;
+  min-width: 2.5rem;
+
+  font-weight: 600;
+  font-size: .95rem;
+  line-height: 1.2;
+
+  color: #fff;
+  background-color: #4895ef; 
+  border: 1px solid transparent;
+  border-radius: 9999px;
+
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+  transition: background-color .2s ease, transform .12s ease,
+              box-shadow .2s ease, border-color .2s ease;
+}
+
+.home-btn:hover{
+  background-color: #0077b6; /* ușor mai închis la hover */
+  box-shadow: 0 10px 28px rgba(0,0,0,.12);
+}
+
+.home-btn:active{
+  background-color: #0077b6;
+  transform: translateY(1px) scale(.99);
+  box-shadow: 0 4px 14px rgba(0,0,0,.12);
+}
+
+.home-btn:focus{
+  outline: none;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(147,197,253,.6);
+}
+
+.home-btn:disabled,
+.home-btn[aria-disabled="true"]{
+  opacity: .6;
+  pointer-events: none;
+}
+
+/* dacă folosești <Link className="home-btn">…</Link> */
+a.home-btn{ color: #fff; }
+
 

@@ -150,9 +150,18 @@ const itemsCount = (s) => (s?.items?.length ?? 0);
     <div className="app">
       <header className="topbar">
         <h1>{tree?.name ?? ""}</h1>
-        <div className="progress">
-          Answered: 1/9
-          {/* Answered: {done}/{questions.length} */}
+        <div style={{display: "flex", gap: "12px"}}>
+          <button
+            type="button"
+            className="home-btn"
+            onClick={() => navigate("/")}
+          >
+            Home
+          </button>
+          <div className="progress">
+            Answered: 1/9
+            {/* Answered: {done}/{questions.length} */}
+          </div>
         </div>
       </header>
 

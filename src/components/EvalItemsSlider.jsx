@@ -118,12 +118,12 @@ useEffect(() => {
         return (
           <div className="subslide" key={item.id ?? idx}>
             <div className="subslide-card">
-                {item?.task?.html && (
-                  <>
-                <article
-                  className="q-text topic-content reading"
-                  dangerouslySetInnerHTML={{ __html: item.task?.html }}
-                />
+              {item?.task?.html ? (
+                <>
+                  <article
+                    className="q-text topic-content reading"
+                    dangerouslySetInnerHTML={{ __html: item.task?.html }}
+                  />
                   {item?.short_source_content?.html && (
                     <button
                       type="button"
@@ -136,6 +136,15 @@ useEffect(() => {
                     </button>
                   )}
                 </>
+              ) : (
+                item?.short_source_content?.html && (
+                  <article
+                    className="q-text topic-content reading"
+                    dangerouslySetInnerHTML={{
+                      __html: item.short_source_content?.html
+                    }}
+                  />
+                )
               )}
 
 
