@@ -1,11 +1,18 @@
 import { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import DraggableModal from "./DraggableModal"
 import "./EvalItemsSlider.css"
 
 export default function EvalItemsSlider({ items }) {
   const trackRef = useRef(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
+  const [srcModal, setSrcModal] = useState({ open: false, html: "" });
+
+  const openSource = (html) => {
+    setSrcModal({ open: true, html: html || "" });
+  };
+  const closeSource = () => setSrcModal({ open: false, html: "" });
 
   const [answers, setAnswers] = useState({});
 
@@ -112,10 +119,23 @@ useEffect(() => {
           <div className="subslide" key={item.id ?? idx}>
             <div className="subslide-card">
                 {item?.task?.html && (
+                  <>
                 <article
                   className="q-text topic-content reading"
                   dangerouslySetInnerHTML={{ __html: item.task?.html }}
                 />
+                  {item?.short_source_content?.html && (
+                    <button
+                      type="button"
+                      className="src-link"
+                      onClick={() =>
+                        openSource(item.short_source_content?.html || "")
+                      }
+                    >
+                      Sursa
+                    </button>
+                  )}
+                </>
               )}
 
 
@@ -133,12 +153,14 @@ useEffect(() => {
                   {t === "input" ? (
                     <div className="field-row">
                       {q?.task?.html && (
-                        <label
-                          htmlFor={inputId}
-                          className="q-task"
-                          dangerouslySetInnerHTML={{ __html: q.task?.html || ""}}
-                        />
+                          <label
+                            htmlFor={inputId}
+                            className="q-task"
+                            dangerouslySetInnerHTML={{ __html: q.task?.html || "" }}
+                          />
+
                       )}
+
                       <input
                         id={inputId}
                         type="text"
@@ -158,9 +180,10 @@ useEffect(() => {
                       {q?.task?.html && (
                         <label
                           htmlFor={`arg-${q.order_number}`}
-                          dangerouslySetInnerHTML={{ __html: q.task?.html || ""}}
+                          dangerouslySetInnerHTML={{ __html: q.task?.html || "" }}
                         />
                       )}
+
                       <textarea
                         id={inputId}
                         rows={rows}
@@ -199,6 +222,15 @@ useEffect(() => {
                   </Link>
                 );
               })()}
+
+              {srcModal.open && (
+                <DraggableModal
+                  title="Sursa"
+                  html={srcModal.html}
+                  onClose={closeSource}
+                />
+              )}
+
 
             </div>
           </div>

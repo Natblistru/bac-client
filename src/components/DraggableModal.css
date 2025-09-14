@@ -1,0 +1,57 @@
+/* link "Sursa" */
+.src-link{
+  margin-left: .6rem;
+  font-size: .9rem;
+  color: brown;
+  background: transparent;
+  border: 0;
+  padding: 2px 4px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.src-link:hover{ text-decoration: none; }
+
+/* overlay + fereastră */
+.modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 1000;
+}
+.modal-box{
+  position: fixed;
+  width: min(800px, 92vw);
+  max-height: 80vh;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 14px 48px rgba(0,0,0,.2);
+  overflow: hidden;
+  /* poziția inițială e din state: left/top */
+}
+.modal-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .6rem .8rem;
+  background: #0f172a;
+  color: #fff;
+  cursor: move; /* zona de drag */
+  user-select: none;
+}
+.modal-title{ font-weight: 600; }
+.modal-close{
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.modal-close:hover{ opacity: .85; }
+.modal-body{
+  padding: .9rem;
+  overflow: auto;
+  max-height: calc(80vh - 44px);
+  line-height: 1.5;
+}
