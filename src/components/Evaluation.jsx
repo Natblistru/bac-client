@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import api from "../routes/api";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import ResizableSplit from "./ResizableSplit";
 import "../App.css";
 
@@ -11,6 +11,10 @@ export default function Evaluation() {
   const [highlight, setHighlight] = useState(null); // <- id-ul item evidențiat
 
   const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [hoverLink, setHoverLink] = useState(null);
+  const toTopicURL = (id) => `/topics/${id}`; 
 
   const [tree, setTree] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -175,10 +179,30 @@ const itemsCount = (s) => (s?.items?.length ?? 0);
                 className="question"
                 id={anchorId}
                 key={item.id ?? item.order_number ?? idx}
+                onMouseLeave={() => {
+                  setHoverLink((prev) => prev?.itemKey === anchorId ? null : prev);
+                }}
                 style={isHi ? { outline: "2px solid #3b82f6", borderRadius: 6 } : undefined}
               >
                 <div className="q-head">
                   <span className="q-no">{item.order_number}</span>
+
+                  {/* ICON: apare numai când textarea-ul de sub acest item e în hover */}
+                  {hoverLink?.itemKey === anchorId && hoverLink?.topicId && (
+                    <button
+                      type="button"
+                      className="jump-badge"
+                      title="Deschide pagina temei"
+                      aria-label="Deschide pagina temei"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(toTopicURL(hoverLink.topicId));
+                      }}
+                    >
+                      Vezi tema
+                    </button>
+                  )}
+
                   {item?.task?.html && (
                     <div
                       className="q-text"
@@ -239,6 +263,17 @@ const itemsCount = (s) => (s?.items?.length ?? 0);
                               const v = e.target.value.slice(0, max);
                               setAnswers((prev) => ({ ...prev, [q.id]: v }));
                             }}
+
+                            onMouseEnter={() => {
+                              if (q?.topic_id) {
+                                setHoverLink({
+                                  itemKey: anchorId,
+                                  topicId: q.topic_id,
+                                });
+                              }
+                            }}
+
+
                           />
                           <div className="char-count">
                             {val.length}/{max}
