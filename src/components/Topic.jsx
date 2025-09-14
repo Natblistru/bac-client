@@ -144,7 +144,7 @@ export default function Topic() {
         </button>
         <button
             type="button"
-            className="home-btn"
+            className="btn-back"
             onClick={() => navigate("/")}
           >
             Home

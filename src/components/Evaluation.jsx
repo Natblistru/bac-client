@@ -153,7 +153,7 @@ const itemsCount = (s) => (s?.items?.length ?? 0);
         <div style={{display: "flex", gap: "12px"}}>
           <button
             type="button"
-            className="home-btn"
+            className="btn-back"
             onClick={() => navigate("/")}
           >
             Home
