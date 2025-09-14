@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import "./EvalItemsSlider.css"
 
 export default function EvalItemsSlider({ items }) {
@@ -179,6 +180,26 @@ useEffect(() => {
                   </div>
                 );
               })}
+
+              {(() => {
+                const ev = item?.evaluation_source?.evaluation;
+                if (!ev?.id) return null;
+
+                const label = ev?.profil
+                  ? `${ev.name}, profil ${ev.profil}`
+                  : ev.name;
+
+                return (
+                  <Link
+                    className="eval-link"
+                    to={`/evaluations/${ev.id}`}
+                    title="Deschide pagina evaluării"
+                  >
+                    {label}
+                  </Link>
+                );
+              })()}
+
             </div>
           </div>
         );

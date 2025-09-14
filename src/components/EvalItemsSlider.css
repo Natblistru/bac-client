@@ -72,3 +72,21 @@
 .subslider-nav.prev { left: -6px; }
 .subslider-nav.next { right: -6px; }
 .subslider-nav:disabled { opacity: .4; cursor: default; }
+
+.eval-link{
+  display:inline-block;
+  margin-top:10px;
+  font-weight:600;
+  color:#2563eb;                  
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.eval-link:hover{
+  color:#1d4ed8;                 
+}
+.eval-link:focus-visible{
+  outline:2px solid #3b82f6;
+  outline-offset:2px;
+  border-radius:4px;
+}
+
