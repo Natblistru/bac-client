@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import api from "../routes/api";
 import { useParams, useNavigate } from "react-router-dom";
 import ResizableSplit from "./ResizableSplit";
+import EvalAnswersModal from "./EvalAnswersModal";
 import "../App.css";
 
 
@@ -19,7 +20,11 @@ export default function Evaluation() {
   const [tree, setTree] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  console.log(id);
+  const [evalModal, setEvalModal] = useState({
+    open: false,
+    data: [],
+  });
+
   useEffect(() => {
     let alive = true;
     const ctrl = new AbortController();
@@ -146,6 +151,15 @@ const itemsCount = (s) => (s?.items?.length ?? 0);
 
 //const done = Object.keys(answers).length;
 
+const openAnswersModal = (item) => {
+  const qs = Array.isArray(item?.questions) ? item.questions : [];
+  setEvalModal({ open: true, data: qs });
+};
+
+const closeAnswersModal = () => {
+  setEvalModal({ open: false, data: [] });
+};
+
   return (
     <div className="app">
       <header className="topbar">
@@ -197,7 +211,7 @@ const itemsCount = (s) => (s?.items?.length ?? 0);
                   <span className="q-no">{item.order_number}</span>
 
                   {/* ICON: apare numai când textarea-ul de sub acest item e în hover */}
-                  {hoverLink?.itemKey === anchorId && hoverLink?.topicId && (
+                  {hoverLink?.itemKey === anchorId && hoverLink?.topicId && !evalModal.open && (
                     <button
                       type="button"
                       className="jump-badge"
@@ -211,6 +225,19 @@ const itemsCount = (s) => (s?.items?.length ?? 0);
                       Vezi tema
                     </button>
                   )}
+
+                  <button
+                    type="button"
+                    className="eval-start-icon"
+                    title="Începe evaluarea"
+                    aria-label="Începe evaluarea"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openAnswersModal(item); // vezi funcția mai jos
+                    }}
+                  >
+                    ▶
+                  </button>
 
                   {item?.task?.html && (
                     <div
@@ -373,6 +400,10 @@ const itemsCount = (s) => (s?.items?.length ?? 0);
           })}
         </nav>
       </footer>
+
+      {evalModal.open && (
+        <EvalAnswersModal data={evalModal.data} onClose={closeAnswersModal} />
+      )}
     </div>
   );
 }
