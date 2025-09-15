@@ -294,7 +294,7 @@ body { margin: 0; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; c
   z-index: 1000; 
   top: 30%;
   left: 50%;
-  width: min(720px, 92vw);
+  /* width: min(770px, 92vw); */
   max-height: 78vh;
   background: #fff;
   border-radius: 12px;
@@ -350,7 +350,7 @@ body { margin: 0; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; c
   display: flex;
   gap: 8px;
   align-items: center;
-  margin: 4px 0;
+  flex-wrap: wrap;
 }
 .eval-a-text{
   display: inline-block;
@@ -359,4 +359,86 @@ body { margin: 0; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; c
   opacity: .7;
   font-size: .9em;
 }
+
+.stepbar{
+  --dot: 22px;
+  --bar: 6px;
+  --gap: 36px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap);
+  padding: 8px 0;
+  margin-left: 8px;
+}
+
+/* linia gri de bază */
+.stepbar::before{
+  content:"";
+  position:absolute;
+  top:50%;
+  left: calc(var(--dot)/2);
+  right: calc(var(--dot)/2);
+  height: var(--bar);
+  transform: translateY(-50%);
+  background:#e5e7eb;         /* gri deschis */
+  border-radius:999px;
+}
+
+/* segmentul „umplut” până la activ */
+.stepbar::after{
+  content:"";
+  position:absolute;
+  top:50%;
+  left: calc(var(--dot)/2);
+  height: var(--bar);
+  transform: translateY(-50%);
+  background:#f59e0b;
+  border-radius:999px;
+  width: calc((100% - var(--dot)) * var(--ratio));
+}
+
+/* dot = buton rotund */
+.stepbar .dot{
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: 50%;
+  border: none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font: 700 12px/1 system-ui, sans-serif;
+  cursor:pointer;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 3px rgba(0,0,0,.08);
+  transition: transform .12s ease, box-shadow .12s ease,
+              background-color .12s ease, color .12s ease;
+  z-index: 99;
+}
+
+/* stări: on = portocaliu, off = gri */
+.stepbar .dot.on{
+  background:#f59e0b;
+  color:#fff;
+  z-index: 99;
+}
+.stepbar .dot.off{
+  background:#e5e7eb;
+  color:#111;
+}
+
+.stepbar .dot:hover{ transform: translateY(-1px); }
+.stepbar .dot:focus-visible{
+  outline:2px solid #3b82f6;
+  outline-offset:2px;
+  border-radius:50%;
+}
+
+.opt-active-label{
+  margin-left: 30px;
+  color: #92400e;         
+  white-space: nowrap;
+}
+
 
