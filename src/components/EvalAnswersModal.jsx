@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 
 function StepDots({ options = [], defaultActive = 0, onChange }) {
   const [active, setActive] = useState(0);
@@ -129,6 +129,28 @@ export default function EvalAnswersModal({
     setDrag({ offX: e.clientX - rect.left, offY: e.clientY - rect.top });
   };
 
+  const pointsOfOption = (opt) => {
+  if (typeof opt?.points === "number") return opt.points;
+  const m = String(opt?.label ?? "").match(/-?\d+/);
+  return m ? Number(m[0]) : 0;
+};
+
+const totals = useMemo(() => {
+  let cur = 0, max = 0;
+  for (const q of data ?? []) {
+    const answers = Array.isArray(q?.answers) ? q.answers : [];
+    for (const a of answers) {
+      max += Number(a?.max_points ?? 0);
+      const opts = Array.isArray(a?.options) ? a.options : [];
+      if (opts.length > 0) {
+        const idx = answerLevels[a.id]?.index ?? 0;      // primul cerc inițial
+        cur += pointsOfOption(opts[idx]);
+      }
+    }
+  }
+  return { cur, max };
+}, [data, answerLevels]);
+
   console.log(data)
 
   return (
@@ -150,7 +172,16 @@ export default function EvalAnswersModal({
           role="toolbar"
           aria-label="Bara modal"
         >
-          <strong>{title}</strong>
+          <div className="eval-head-left">
+            <strong className="modal-title">{title}</strong>
+            <span
+              className="score-badge"
+              title={`Scor: ${totals.cur} / ${totals.max}`}
+              aria-label={`Scor curent ${totals.cur} din ${totals.max}`}
+            >
+              {totals.cur}/{totals.max}
+            </span>
+          </div>
           <button
             type="button"
             className="eval-close"

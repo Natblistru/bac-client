@@ -471,4 +471,21 @@ body { margin: 0; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; c
   white-space: nowrap;
 }
 
+.eval-head-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.score-badge{
+  display:inline-block;
+  padding:0px 8px 2px;
+  border-radius:999px;
+  font-weight:700;
+  font-size:16px;
+  background:#ffdda1;
+  color:#111;
+  box-shadow:0 1px 6px rgba(0,0,0,.2);
+}
+
 
