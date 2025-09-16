@@ -436,8 +436,38 @@ body { margin: 0; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; c
 }
 
 .opt-active-label{
-  margin-left: 30px;
+  /* margin-left: 30px; */
   color: #92400e;         
+  white-space: nowrap;
+}
+
+.eval-table th,
+.eval-table td{
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+}
+
+.eval-table thead th{
+  text-align: left;
+  font-weight: 700;
+  background: #f9fafb;
+}
+
+.col-no{ width: 48px; text-align: right; color:#6b7280; }
+.col-task{ width: 42%; }
+.col-steps{ width: 34%; }
+.col-label{ width: auto; }
+
+.col-steps .stepbar{
+  margin-left: 0;     /* fără offset față de text */
+  padding: 4px 0;     /* mai compact */
+}
+
+/* label activ lângă coloană, pe o singură linie când se poate */
+.opt-active-label{
+  font-weight: 600;
+  color: #92400e;
   white-space: nowrap;
 }
 

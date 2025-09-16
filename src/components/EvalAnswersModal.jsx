@@ -165,48 +165,55 @@ export default function EvalAnswersModal({
           {data.length === 0 ? (
             <p>Nu există întrebări pentru acest item.</p>
           ) : (
-            <ol className="eval-q-list">
-              {data.map((q) => (
-                <li key={q.id} className="eval-q">
-                  <ul className="eval-a-list">
-                    {(q?.answers ?? []).map((a) => {
-                      const opts = Array.isArray(a?.options) ? a.options : [];
-                      const fallbackIdx = 0;
-                      const activeIdx  = answerLevels[a.id]?.index ?? fallbackIdx;
-                      const activeLbl  = answerLevels[a.id]?.label ?? opts[fallbackIdx]?.label ?? "";
+            <table className="eval-table">
+              <thead>
+                <tr>
+                  <th className="col-no">#</th>
+                  <th className="col-task">Criteriu</th>
+                  <th className="col-steps">Nivel</th>
+                  <th className="col-label">Descriere nivel</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((q, qi) =>
+                  (q?.answers ?? []).map((a) => {
+                    const opts = Array.isArray(a?.options) ? a.options : [];
+                    const fallbackIdx = 0;
+                    const activeIdx  = answerLevels[a.id]?.index ?? fallbackIdx;
+                    const activeLbl  = answerLevels[a.id]?.label ?? opts[fallbackIdx]?.label ?? "";
 
-                      return (
-                        <li key={a.id} className="eval-a">
-                          <span className="eval-a-text">{a.task}</span>
-
+                    return (
+                      <tr key={`${q.id}-${a.id}`}>
+                        <td className="col-no">{qi + 1}</td>
+                        <td className="col-task">{a.task}</td>
+                        <td className="col-steps">
                           {opts.length > 0 && (
                             <StepDots
                               options={opts}
-                              defaultActive={activeIdx}      // primul cerc activ la început
-                              onChange={(i, opt) =>         // actualizează labelul activ
+                              defaultActive={activeIdx}
+                              onChange={(i, opt) =>
                                 setAnswerLevels(prev => {
                                   const newLabel = opt?.label ?? "";
                                   const prevEntry = prev[a.id];
-                                  // evită setState dacă nu s-a schimbat nimic
                                   if (prevEntry?.index === i && prevEntry?.label === newLabel) return prev;
                                   return { ...prev, [a.id]: { index: i, label: newLabel } };
                                 })
                               }
                             />
                           )}
-
-                          {opts.length > 0 && (
-                            <span className="opt-active-label">{activeLbl}</span>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </li>
-              ))}
-            </ol>
+                        </td>
+                        <td className="col-label">
+                          {opts.length > 0 && <span className="opt-active-label">{activeLbl}</span>}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           )}
         </div>
+
       </div>
     </>
   );
