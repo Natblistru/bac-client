@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import DraggableModal from "./DraggableModal"
+import EvalAnswersModal from "./EvalAnswersModal"; 
 import "./EvalItemsSlider.css"
 
 export default function EvalItemsSlider({ items }) {
@@ -8,6 +9,7 @@ export default function EvalItemsSlider({ items }) {
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
   const [srcModal, setSrcModal] = useState({ open: false, html: "" });
+  const [evalModal, setEvalModal] = useState({ open: false, data: [], title: "" });
 
   const openSource = (html) => {
     setSrcModal({ open: true, html: html || "" });
@@ -109,6 +111,63 @@ useEffect(() => {
 
   if (!items?.length) return null;
 
+// Normalizează un item de tip "slider" la forma cerută de EvalAnswersModal
+function normalizeForEvalModal(item) {
+  const qs = (item?.evaluation_questions || item?.questions || []).map((q) => {
+    const rawAnswers = q?.evaluation_answers || q?.answers || [];
+    const answers = rawAnswers.map((a) => {
+      const rawOpts = a?.evaluation_answer_options || a?.options || [];
+      const options = rawOpts.map((o) => ({
+        // chei compatibile cu ce așteaptă StepDots / modal
+        answer_option_id: o?.answer_option_id ?? o?.id,
+        option_id: o?.option_id ?? o?.evaluation_option_id,
+        label: o?.label ?? o?.evaluation_option?.label ?? "",
+        points:
+          typeof o?.points === "number"
+            ? o.points
+            : Number(o?.evaluation_option?.points ?? 0),
+      }));
+
+      return {
+        id: a.id,
+        task: a.task,
+        content: a.content,
+        max_points: a.max_points,
+        options,
+      };
+    });
+
+    return {
+      id: q.id,
+      order_number: q.order_number,
+      subtopic_id: q.subtopic_id ?? item.subtopic_id,
+      subtopic_name: q.subtopic_name ?? item.subtopic_name,
+      topic_id: q.topic_id ?? item.topic_id,
+      topic_name: q.topic_name ?? item.topic_name,
+      task: q.task,
+      hint: q.hint,
+      placeholder: q.placeholder,
+      content_settings: q.content_settings,
+      type: q.type,
+      answers,
+    };
+  });
+
+  return qs;
+}
+
+const openAnswersModal = (item) => {
+  const qs = normalizeForEvalModal(item);   // <— aici!
+  setEvalModal({
+    open: true,
+    data: qs,
+    title: "Începe evaluarea",
+  });
+};
+
+const closeAnswersModal = () =>
+  setEvalModal({ open: false, data: [], title: "" });
+
   return (
   <div className="subslider">
     <div className="subslider-track" ref={trackRef}>
@@ -118,6 +177,17 @@ useEffect(() => {
         return (
           <div className="subslide" key={item.id ?? idx}>
             <div className="subslide-card">
+              {/* buton – începe evaluarea */}
+              <button
+                type="button"
+                className="eval-start-icon"
+                title="Începe evaluarea"
+                aria-label="Începe evaluarea"
+                onClick={() => openAnswersModal(item)}
+              >
+                ▶
+              </button>
+
               {item?.task?.html ? (
                 <>
                   <article
@@ -251,6 +321,15 @@ useEffect(() => {
             onClick={() => nudge(-1)} disabled={!canPrev} aria-label="Previous">‹</button>
     <button type="button" className="subslider-nav next"
             onClick={() => nudge(1)} disabled={!canNext} aria-label="Next">›</button>
+  
+    {evalModal.open && (
+      <EvalAnswersModal
+        data={evalModal.data}
+        onClose={closeAnswersModal}
+        title={evalModal.title}
+      />
+    )}
+
   </div>
 
   );
