@@ -15,7 +15,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Inter, system-u
 
 /* dotted background */
 .home{
-  min-height:100dvh;
+  min-height: calc(100dvh - 80px);
   background:
     radial-gradient(#171717 1px, transparent 1px) 0 0/12px 12px,
     var(--bg);
