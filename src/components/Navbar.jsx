@@ -1,6 +1,8 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Navbar({ me, onOpenLogin, onOpenSignup, onLogout }) {
+
+  const navigate = useNavigate();
   return (
     <header className="nav">
       <div className="logo">
@@ -9,7 +11,13 @@ export default function Navbar({ me, onOpenLogin, onOpenSignup, onLogout }) {
 
       <nav className="nav-links">
         <button type="button">Pricing ▾</button>
+        <button
+            type="button"
 
+            onClick={() => navigate("/")}
+          >
+            Home
+          </button>
         {!me ? (
           <>
             <button type="button" className="link" onClick={onOpenLogin}>

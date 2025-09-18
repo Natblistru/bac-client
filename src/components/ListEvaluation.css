@@ -10,6 +10,7 @@ body { background: var(--bg); }
 
 .page-title {
   padding: 0 0 20px;
+  margin-top: 0;
   border-bottom: 1px solid rgba(16,22,47,0.28);
 }
 

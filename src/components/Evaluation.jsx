@@ -165,13 +165,6 @@ const closeAnswersModal = () => {
       <header className="topbar">
         <h1>{tree?.name ?? ""}</h1>
         <div style={{display: "flex", gap: "12px"}}>
-          <button
-            type="button"
-            className="btn-back"
-            onClick={() => navigate("/")}
-          >
-            Home
-          </button>
           <div className="progress">
             Answered: 1/9
             {/* Answered: {done}/{questions.length} */}
