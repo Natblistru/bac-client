@@ -49,6 +49,55 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Inter, system-u
   background:var(--yellow); color:#111; font-weight:700; padding:8px 14px;
 }
 
+/* badge-ul de salut */
+.nav .nav-links .welcome{
+  --accent: #6d28d9;                 /* purple-700 */
+  --accent-ink: #4c1d95;             /* purple-800 */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #e5e5e5;          /* gri de bază */
+  border: 1px solid #d4d4d4;     /* ușor mai închis decât fundalul */
+  color: #111827;
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+  line-height: 1;
+  font-weight: 500;
+  white-space: nowrap;
+  max-width: 28ch;                   /* taie grațios numele foarte lung */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+
+/* mică iconiță înainte (fără markup suplimentar) */
+.nav .nav-links .welcome::before{
+  content: "👋";
+  font-size: 14px;
+  line-height: 1;
+  transform: translateY(1px);
+}
+
+/* evidențiază numele */
+.nav .nav-links .welcome > strong{
+  color: #111827;
+  font-weight: 700;
+}
+
+/* feedback la hover/focus pentru consistență cu linkurile */
+.nav .nav-links .welcome:hover{
+  background: #d4d4d4;          /* puțin mai închis la hover */
+  border-color: #cfcfcf;
+}
+
+.nav .nav-links .welcome:focus-visible{
+  outline: 2px solid color-mix(in srgb, var(--accent) 60%, #3b82f6 40%);
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+
+
 /* hero */
 .hero{max-width:1200px;margin:16px auto 80px;padding:0 18px}
 .hero-card{

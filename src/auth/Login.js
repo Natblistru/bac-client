@@ -33,8 +33,8 @@ export default function LoginForm({ onSuccess, onClose }) {
         ✕
       </button>
       <h3>Log in</h3>
-      
-      <div className="field">
+
+      <div className="field icon email">
         <input
           id="email"
           name="email"
@@ -48,7 +48,7 @@ export default function LoginForm({ onSuccess, onClose }) {
       </div>
 
       {/* Parolă */}
-      <div className="field has-eye">
+      <div className="field icon password has-eye">
         <input
           id="password"
           name="password"

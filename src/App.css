@@ -580,13 +580,7 @@ body { margin: 0; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; c
 .modal .auth-form input[name="last_name"]{
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'><path d='M20 21a8 8 0 10-16 0'/><circle cx='12' cy='7' r='4'/></svg>");
 }
-.modal .auth-form input[name="email"]{
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'><rect x='3' y='5' width='18' height='14' rx='2'/><path d='M3 7l9 6 9-6'/></svg>");
-}
-.modal .auth-form input[name="password"],
-.modal .auth-form input[name="password_confirmation"]{
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'><rect x='5' y='11' width='14' height='9' rx='2'/><path d='M7 11V8a5 5 0 0110 0v3'/></svg>");
-}
+
 .modal .auth-form input[name],
 .modal .auth-form input[type="email"],
 .modal .auth-form input[type="password"]{
@@ -699,6 +693,38 @@ body { margin: 0; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; c
 .modal .auth-form .field > input:invalid:not(:placeholder-shown) + label{
   color: #f43f5e;
 }
+
+/* Nu mai pune icon pe input – altfel se dublează */
+.modal .auth-form input[name="email"],
+.modal .auth-form input[type="password"]{
+  background-image: none !important;
+} 
+/* Wrapper cu icon la stânga */
+.modal .auth-form .field.icon{ position: relative; }
+.modal .auth-form .field.icon::before{
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px; height: 18px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 18px 18px;
+  opacity: .9;
+  pointer-events: none;
+}
+
+/* Email */
+.modal .auth-form .field.icon.email::before{
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'><rect x='3' y='5' width='18' height='14' rx='2'/><path d='M3 7l9 6 9-6'/></svg>");
+}
+
+/* Parolă (lacăt) */
+.modal .auth-form .field.icon.password::before{
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'><rect x='5' y='11' width='14' height='9' rx='2'/><path d='M7 11V8a5 5 0 0110 0v3'/></svg>");
+}
+
 
 /* câmpuri cu „ochi” */
 .modal .auth-form .field.has-eye > input{

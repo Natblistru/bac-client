@@ -21,8 +21,8 @@ export default function Navbar({ me, onOpenLogin, onOpenSignup, onLogout }) {
           </>
         ) : (
           <>
-            <span>
-              Bun venit, {me.first_name} {me.last_name}
+            <span className="welcome">
+              Bun venit, <strong>{me.first_name} {me.last_name}</strong>
             </span>
             <button type="button" className="link" onClick={onLogout}>
               Log out

@@ -69,7 +69,7 @@ export default function Register({ onSuccess, onClose }) {
         <label htmlFor="last_name">Nume</label>
       </div>
 
-      <div className="field">
+      <div className="field icon email">
         <input
           id="email"
           name="email"
@@ -83,7 +83,7 @@ export default function Register({ onSuccess, onClose }) {
       </div>
 
       {/* Parolă */}
-      <div className="field has-eye">
+      <div className="field icon password has-eye">
         <input
           id="password"
           name="password"
@@ -120,7 +120,7 @@ export default function Register({ onSuccess, onClose }) {
       </div>
 
       {/* Confirmă parola */}
-      <div className="field has-eye">
+      <div className="field icon password has-eye">
         <input
           id="password_confirmation"
           name="password_confirmation"
