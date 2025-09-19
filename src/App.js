@@ -8,14 +8,16 @@ import ListTopics from "./components/ListTopics";
 import Topic from "./components/Topic";
 import Evaluation from "./components/Evaluation";
 import Login from "./auth/Login.js";
+import Register from "./auth/Register";
 
 export default function App() {
   const [loginOpen, setLoginOpen] = useState(false);
+  const [signupOpen, setSignupOpen] = useState(false);
 
   return (
     <BrowserRouter>
       {/* onOpenLogin este callback-ul pe care îl vor folosi componentele din app */}
-      <AuthProvider onOpenLogin={() => setLoginOpen(true)}>
+      <AuthProvider onOpenLogin={() => setLoginOpen(true)} onOpenSignup={() => setSignupOpen(true)}>
         <Routes>
           <Route element={<AppLayout />}>
             <Route path="/" element={<Home />} />
@@ -30,9 +32,25 @@ export default function App() {
         {loginOpen && (
           <Login
             onClose={() => setLoginOpen(false)}
-            onSuccess={() => setLoginOpen(false)}   // contextul deja are me
+            onSuccess={() => setLoginOpen(false)}
+            onOpenSignup={() => {        // <-- important: închide login și deschide register
+              setLoginOpen(false);
+              setSignupOpen(true);
+            }}
           />
         )}
+
+        {signupOpen && (
+          <Register
+            onClose={() => setSignupOpen(false)}
+            onSuccess={() => setSignupOpen(false)}
+            onOpenLogin={() => {         // opțional: link „Have an account? Log in”
+              setSignupOpen(false);
+              setLoginOpen(true);
+            }}
+          />
+        )}
+
       </AuthProvider>
     </BrowserRouter>
   );

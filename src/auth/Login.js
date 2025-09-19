@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useAuth } from "./auth.js";
 import "../App.css";
 
-export default function Login({ onSuccess, onClose }) {
+export default function Login({ onSuccess, onClose, onOpenSignup }) {
   const { login } = useAuth(); 
   const [f, setF] = useState({ email: "", password: "", remember: true });
   const [showPw, setShowPw] = useState({ password: false });
@@ -96,6 +96,21 @@ export default function Login({ onSuccess, onClose }) {
       </div>
       {err && <div className="error">{err}</div>}
       <button type="submit">Intră</button>
+
+      <p className="form-note">
+        Need an account?{" "}
+        <button
+          type="button"
+          className="inline-link"
+          onClick={() => {
+            onClose?.();       // închide Login
+            onOpenSignup?.();  // deschide Register
+          }}
+        >
+          Sign up!
+        </button>
+      </p>
+
     </form>
     </div>,
     document.body
