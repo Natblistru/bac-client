@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import api from "../routes/api";
 import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/auth";
 import ResizableSplit from "./ResizableSplit";
 import EvalAnswersModal from "./EvalAnswersModal";
 import "../App.css";
@@ -19,6 +20,8 @@ export default function Evaluation() {
 
   const [tree, setTree] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const { me, requireAuth } = useAuth();
 
   const [evalModal, setEvalModal] = useState({
     open: false,
@@ -152,6 +155,10 @@ const itemsCount = (s) => (s?.items?.length ?? 0);
 //const done = Object.keys(answers).length;
 
 const openAnswersModal = (item) => {
+  if (!requireAuth()) {
+    return;
+  }
+
   const qs = Array.isArray(item?.questions) ? item.questions : [];
   setEvalModal({ open: true, data: qs });
 };

@@ -109,10 +109,6 @@ export default function EvalItemsSlider({ items }) {
     };
   }, [items]);
 
-  useEffect(() => {
-    console.log("[Auth] loading:", "me:", me);
-  }, [me]);
-
   const nudge = (dir) => {
     const el = trackRef.current;
     if (!el) return;
