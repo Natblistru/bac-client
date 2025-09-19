@@ -72,7 +72,7 @@ export default function Evaluation() {
 
   if (loading) return <div>Se încarcă…</div>;
   if (!tree) return <div>Evaluarea nu a fost găsită.</div>;
-  console.log(tree);
+  // console.log(tree);
 
   // Stiluri inline pentru footer fix
 const footerStyle = {

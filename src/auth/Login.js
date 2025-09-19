@@ -1,28 +1,39 @@
 import { useState } from "react";
-import api, { bootCsrf } from "../routes/api.js";
+import { createPortal } from "react-dom";
+import { useAuth } from "./auth.js";
+import "../App.css";
 
-export default function LoginForm({ onSuccess, onClose }) {
+export default function Login({ onSuccess, onClose }) {
+  const { login } = useAuth(); 
   const [f, setF] = useState({ email: "", password: "", remember: true });
   const [showPw, setShowPw] = useState({ password: false });
   const [err, setErr] = useState(null);
+
   const onChange = (e) => {
     const { name, type, checked, value } = e.target;
-    setF({ ...f, [name]: type === "checkbox" ? checked : value });
+    setF((s) => ({ ...s, [name]: type === "checkbox" ? checked : value }));
   };
 
   async function submit(e) {
     e.preventDefault();
     setErr(null);
     try {
-      await bootCsrf();
-      const { data } = await api.post("/api/login", f);
-      onSuccess?.(data.user);
+      await login(f);              // setează me în context
+      onSuccess?.();               // doar închide modalul în App
     } catch (ex) {
       setErr(ex.response?.data?.message || "Eroare la autentificare");
     }
   }
 
-  return (
+  // === PORTAL: se randă direct în <body>, nu “sub” layout-ul tău ===
+  return createPortal(
+    <div
+      className="modal"
+      role="presentation"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose?.();
+      }}
+    >
     <form onSubmit={submit} className="auth-form">
       <button
         type="button"
@@ -86,5 +97,7 @@ export default function LoginForm({ onSuccess, onClose }) {
       {err && <div className="error">{err}</div>}
       <button type="submit">Intră</button>
     </form>
+    </div>,
+    document.body
   );
 }

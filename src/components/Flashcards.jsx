@@ -18,7 +18,7 @@ export default function Flashcards({ cards }) {
 
   // helpers pentru HTML din backend
   const toHtml = (val) => {
-    console.log(val)
+    // console.log(val)
     if (!val) return "";
     if (typeof val === "string") return val;
     if (typeof val.html === "string") return val.html;

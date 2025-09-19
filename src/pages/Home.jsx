@@ -1,19 +1,9 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DisciplineCard from "../components/DisciplineCard";
-import Register from "../auth/Register";
-import Login from "../auth/Login";
-import api from "../routes/api.js";
 import "./Home.css";
 
 export default function Home() {
   const navigate = useNavigate();
-  const [me, setMe] = useState(null);
-  const [which, setWhich] = useState(null); // 'login' | 'signup' | null
-
-  const handleAuthClose = () => {
-    setWhich(null);          // ← închide modalul
-  };
 
   return (
     <div className="home">

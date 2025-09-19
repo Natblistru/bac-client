@@ -151,7 +151,7 @@ const totals = useMemo(() => {
   return { cur, max };
 }, [data, answerLevels]);
 
-  console.log(data)
+  // console.log(data)
 
   return (
     <>

@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/auth";
 
-export default function Navbar({ me, onOpenLogin, onOpenSignup, onLogout }) {
-
+export default function Navbar({ onOpenLogin, onOpenSignup }) {
+  const { me, logout } = useAuth();
   const navigate = useNavigate();
   return (
     <header className="nav">
@@ -32,7 +33,7 @@ export default function Navbar({ me, onOpenLogin, onOpenSignup, onLogout }) {
             <span className="welcome">
               Bun venit, <strong>{me.first_name} {me.last_name}</strong>
             </span>
-            <button type="button" className="link" onClick={onLogout}>
+            <button type="button" className="link" onClick={logout}>
               Log out
             </button>
           </>

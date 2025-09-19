@@ -118,12 +118,12 @@ export default function Topic() {
       : apiBase + (row?.cover_url || ''))
     || (apiBase + '/storage/' + (row?.path || '')); // fallback
 
-  console.log(row)
+  // console.log(row)
 
   const cards = (row?.flip_cards ?? row?.flipCards ?? []).map((fc, i) => {
     const front = fc.task;
     const back  = fc.answer;
-    console.log('[flipcard]', i, { id: fc.id, fc, front, back });
+    // console.log('[flipcard]', i, { id: fc.id, fc, front, back });
     return { id: fc.id, front, back };
   });
 
