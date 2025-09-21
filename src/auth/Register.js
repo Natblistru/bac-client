@@ -2,8 +2,10 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import api, { bootCsrf } from "../routes/api.js";
+import { useAuth } from "./auth.js";
 
 export default function Register({ onSuccess, onOpenLogin, onClose }) {
+  const { login } = useAuth();
   const [f, setF] = useState({
     first_name: "",
     last_name: "",
@@ -20,11 +22,45 @@ export default function Register({ onSuccess, onOpenLogin, onClose }) {
     e.preventDefault();
     setErr(null);
     
+    // opțional: validări client-side
+    if ((f.password ?? "").length < 8) {
+      setErr("Parola trebuie să conțină cel puțin 8 caractere.");
+      return;
+    }
+    if (f.password !== f.password_confirmation) {
+      setErr("Parola și confirmarea nu coincid.");
+      return;
+    }
+
+
     try {
       await bootCsrf();
       const payload = { ...f, role: "student" };
       const { data } = await api.post("/api/register", payload);
-      onSuccess?.(data.user);
+
+      // ➊ încearcă login automat cu aceleași credențiale
+      const resLogin = await login({
+        email: f.email,
+        password: f.password,
+        remember: true,
+      });
+
+      if (resLogin?.ok === false) {
+        // contul s-a creat, dar autentificarea automată a eșuat
+        setErr(
+          resLogin.message ||
+          "Cont creat, dar autentificarea automată a eșuat. Te rugăm să te loghezi manual."
+        );
+        // opțional: deschide direct Login
+        // onClose?.(); onOpenLogin?.();
+       return;
+      }
+
+     // succes: avem sesiune + user din login
+      onSuccess?.(resLogin?.user || data?.user);
+
+
+
     } catch (ex) {
       const res = ex.response?.data;
       const fieldErrors = res?.errors ? Object.values(res.errors).flat() : [];
