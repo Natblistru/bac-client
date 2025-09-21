@@ -9,10 +9,14 @@ import Topic from "./components/Topic";
 import Evaluation from "./components/Evaluation";
 import Login from "./auth/Login.js";
 import Register from "./auth/Register";
+import ForgotPassword from "./auth/ForgotPassword";
+import ResetPassword from "./auth/ResetPassword.jsx";
 
 export default function App() {
   const [loginOpen, setLoginOpen] = useState(false);
   const [signupOpen, setSignupOpen] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+
 
   return (
     <BrowserRouter>
@@ -25,6 +29,7 @@ export default function App() {
             <Route path="/discipline/romana/teme"     element={<ListTopics />} />
             <Route path="/topics/:id"      element={<Topic />} />
             <Route path="/evaluations/:id" element={<Evaluation />} />
+            <Route path="reset-password/:token" element={<ResetPassword />} />
           </Route>
         </Routes>
 
@@ -36,6 +41,10 @@ export default function App() {
             onOpenSignup={() => {        // <-- important: închide login și deschide register
               setLoginOpen(false);
               setSignupOpen(true);
+            }}
+            onOpenForgot={() => { 
+              setLoginOpen(false); 
+              setForgotOpen(true); 
             }}
           />
         )}
@@ -50,7 +59,11 @@ export default function App() {
             }}
           />
         )}
-
+        {forgotOpen && (
+          <ForgotPassword
+            onClose={() => setForgotOpen(false)}
+          />
+        )}
       </AuthProvider>
     </BrowserRouter>
   );

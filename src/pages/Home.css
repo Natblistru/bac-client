@@ -65,7 +65,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Inter, system-u
   line-height: 1;
   font-weight: 500;
   white-space: nowrap;
-  max-width: 28ch;                   /* taie grațios numele foarte lung */
+  max-width: 48ch;                   /* taie grațios numele foarte lung */
   overflow: hidden;
   text-overflow: ellipsis;
   transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;

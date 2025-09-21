@@ -629,7 +629,13 @@ body { margin: 0; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; c
 .modal .auth-form .close-btn:hover{ color: #111; background: #f3f4f6; }
 .modal .auth-form .close-btn:focus-visible{ outline: 2px solid #3b82f6; outline-offset: 2px; }
 
+.modal.modal-forgot {
+  z-index: 1100; 
+}
 
+.modal.modal-forgot .auth-form {
+  grid-template-columns: 1fr;
+}
 
 /* Preferințe reduce-motion */
 @media (prefers-reduced-motion: no-preference){

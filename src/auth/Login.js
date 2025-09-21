@@ -4,7 +4,7 @@ import { useAuth } from "./auth.js";
 import Dialog from "../components/Dialog";
 import "../App.css";
 
-export default function Login({ onSuccess, onClose, onOpenSignup }) {
+export default function Login({ onSuccess, onClose, onOpenSignup, onOpenForgot }) {
   const { login } = useAuth(); 
   const [f, setF] = useState({ email: "", password: "", remember: true });
   const [showPw, setShowPw] = useState({ password: false });
@@ -111,6 +111,19 @@ export default function Login({ onSuccess, onClose, onOpenSignup }) {
       </div>
       {err && <div className="error">{err}</div>}
       <button type="submit">Intră</button>
+
+      <p className="form-note">
+        <button
+          type="button"
+          className="inline-link"
+          onClick={() => {
+            console.log("[Login] Forgot clicked");
+            onOpenForgot?.();      
+          }}
+        >
+          Forgot password?
+        </button>
+      </p>
 
       <p className="form-note">
         Need an account?{" "}
