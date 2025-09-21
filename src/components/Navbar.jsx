@@ -4,6 +4,7 @@ import { useAuth } from "../auth/auth";
 export default function Navbar({ onOpenLogin, onOpenSignup }) {
   const { me, logout } = useAuth();
   const navigate = useNavigate();
+  console.log("me", me)
   return (
     <header className="nav">
       <div className="logo">
@@ -19,7 +20,7 @@ export default function Navbar({ onOpenLogin, onOpenSignup }) {
           >
             Home
           </button>
-        {!me ? (
+        {!me?.id ? (
           <>
             <button type="button" className="link" onClick={onOpenLogin}>
               Log In

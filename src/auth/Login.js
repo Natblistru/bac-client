@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "./auth.js";
+import Dialog from "../components/Dialog";
 import "../App.css";
 
 export default function Login({ onSuccess, onClose, onOpenSignup }) {
@@ -8,6 +9,7 @@ export default function Login({ onSuccess, onClose, onOpenSignup }) {
   const [f, setF] = useState({ email: "", password: "", remember: true });
   const [showPw, setShowPw] = useState({ password: false });
   const [err, setErr] = useState(null);
+  const [dlg, setDlg] = useState({ open: false, msg: "" });
 
   const onChange = (e) => {
     const { name, type, checked, value } = e.target;
@@ -18,12 +20,25 @@ export default function Login({ onSuccess, onClose, onOpenSignup }) {
     e.preventDefault();
     setErr(null);
     try {
-      await login(f);              // setează me în context
-      onSuccess?.();               // doar închide modalul în App
+      const res = await login(f);              // setează me în context
+
+      if (res?.ok === false) {
+        setDlg({ open: true, msg: res.message });
+        return;
+      }
+      onSuccess?.();               
     } catch (ex) {
-      setErr(ex.response?.data?.message || "Eroare la autentificare");
+      const msg =
+        ex?.response?.data?.message ||
+        ex?.message ||
+        "Autentificare eșuată.";
+      setDlg({ open: true, msg }); // afișează în fereastra ta, nu în <div className="error">
     }
   }
+  useEffect(() => {
+    console.log("dlg changed:", dlg);
+  }, [dlg]);
+
 
   // === PORTAL: se randă direct în <body>, nu “sub” layout-ul tău ===
   return createPortal(
@@ -112,6 +127,13 @@ export default function Login({ onSuccess, onClose, onOpenSignup }) {
       </p>
 
     </form>
+      <Dialog
+        open={dlg.open}
+        title="Autentificare eșuată"
+        onClose={() => setDlg({ open: false, msg: "" })}
+      >
+        {dlg.msg}
+      </Dialog>
     </div>,
     document.body
   );

@@ -1,14 +1,43 @@
 // auth/auth.js
 import { createContext, useContext, useEffect, useState } from "react";
+import { extractErrorMessage } from "../utils/http";
 import api, { bootCsrf } from "../routes/api";
 
 const AuthCtx = createContext(null);
 const STORAGE_KEY = "auth:user";
 
 function readUser() {
-  try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : null; }
-  catch { return null; }
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (!s) return null;
+
+    const data = JSON.parse(s);
+    return isValidUser(data) ? data : null;
+  } catch {
+    return null;
+  }
 }
+
+function isValidUser(x) {
+    console.log("x",x)
+  if (!x || typeof x !== "object") return false;
+
+  // filtrează cazurile de eroare stocate în cache
+  if (x.status === 401) return false;
+  if (typeof x.message === "string" &&
+      x.message.toLowerCase().includes("invalid credentials")) {
+    return false;
+  }
+
+  // reguli minime pentru un "user" valid
+  const hasId = typeof x.id === "number" && x.id > 0;
+  const hasEmail =
+    x.email == null || (typeof x.email === "string" && x.email.includes("@"));
+
+  console.log("hasId",hasId)
+  return hasId && hasEmail;
+}
+
 function writeUser(user) {
   if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
   else localStorage.removeItem(STORAGE_KEY);
@@ -45,13 +74,21 @@ export function AuthProvider({ children, onOpenLogin }) {
 
   // Login: apelează endpointul tău (care returnează user) și persistă local
   const login = async (payload) => {
-    // păstrează dacă ai nevoie de CSRF (Sanctum)
-    try { await bootCsrf(); } catch {}
-    const { data } = await api.post("/api/login", payload); // sau "/login" dacă folosești web guard
-    const user = data?.user ?? data; // în caz că ai { user: {...} } sau direct userul
-    setMe(user);
-    writeUser(user);
-    return user;
+    try {
+      try { await bootCsrf(); } catch {}
+      const { data } = await api.post("/api/login", payload); // sau "/login" dacă folosești web guard
+      
+      if (data?.status === 401) {
+        return { ok: false, message: extractErrorMessage(data) };
+      }
+        
+      const user = data?.user ?? data; // în caz că ai { user: {...} } sau direct userul
+      setMe(user);
+      writeUser(user);
+      return user;
+    } catch (err) {
+      return { ok: false, message: extractErrorMessage(err) };
+    }
   };
 
   // Logout: opțional lovește serverul, dar oricum curăță localStorage

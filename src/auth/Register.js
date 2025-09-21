@@ -19,6 +19,7 @@ export default function Register({ onSuccess, onOpenLogin, onClose }) {
   async function submit(e) {
     e.preventDefault();
     setErr(null);
+    
     try {
       await bootCsrf();
       const payload = { ...f, role: "student" };
@@ -100,8 +101,11 @@ export default function Register({ onSuccess, onOpenLogin, onClose }) {
             value={f.password}
             onChange={onChange}
             required
+            minLength={8}
+            aria-invalid={!!err && (f.password ?? "").length < 8}
+            title="Minim 8 caractere"
           />
-          <label htmlFor="password">Parolă</label>
+          <label htmlFor="password">Parola</label>
 
           <button
             type="button"
