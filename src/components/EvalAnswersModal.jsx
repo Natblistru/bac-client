@@ -75,12 +75,12 @@ export default function EvalAnswersModal({
   data = [],
   onClose,
   title = "Începe evaluarea",
-  studentId = 8,
 }) {
   const boxRef = useRef(null);
   const [pos, setPos] = useState({ x: 480, y: 80 });
   const [drag, setDrag] = useState(null); // { offX, offY } | null
   const [busy, setBusy] = useState(false);
+  const studentId = Number(localStorage.getItem("auth.student_id")) || null;
 
   const [answerLevels, setAnswerLevels] = useState({});
 

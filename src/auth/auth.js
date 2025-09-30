@@ -5,6 +5,7 @@ import api, { bootCsrf } from "../routes/api";
 
 const AuthCtx = createContext(null);
 const STORAGE_KEY = "auth:user";
+const STUDENT_ID_KEY = "auth.student_id";
 
 function readUser() {
   try {
@@ -85,6 +86,12 @@ export function AuthProvider({ children, onOpenLogin }) {
       const user = data?.user ?? data; // în caz că ai { user: {...} } sau direct userul
       setMe(user);
       writeUser(user);
+      // salvează student_id (din roleId)
+      if (typeof data?.roleId !== "undefined") {
+        localStorage.setItem(STUDENT_ID_KEY, String(data.roleId));
+      } else {
+        localStorage.removeItem(STUDENT_ID_KEY);
+      }
       return user;
     } catch (err) {
       return { ok: false, message: extractErrorMessage(err) };
