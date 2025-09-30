@@ -8,7 +8,7 @@ export default function ForgotPassword({ onClose }) {
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  console.log("[ForgotPassword] mounted");
+  //console.log("[ForgotPassword] mounted");
 
   const submit = async (e) => {
     e.preventDefault();

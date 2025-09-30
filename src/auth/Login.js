@@ -36,7 +36,7 @@ export default function Login({ onSuccess, onClose, onOpenSignup, onOpenForgot }
     }
   }
   useEffect(() => {
-    console.log("dlg changed:", dlg);
+    //console.log("dlg changed:", dlg);
   }, [dlg]);
 
 
@@ -117,7 +117,7 @@ export default function Login({ onSuccess, onClose, onOpenSignup, onOpenForgot }
           type="button"
           className="inline-link"
           onClick={() => {
-            console.log("[Login] Forgot clicked");
+           //console.log("[Login] Forgot clicked");
             onOpenForgot?.();      
           }}
         >

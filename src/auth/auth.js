@@ -19,7 +19,7 @@ function readUser() {
 }
 
 function isValidUser(x) {
-    console.log("x",x)
+  //  console.log("x",x)
   if (!x || typeof x !== "object") return false;
 
   // filtrează cazurile de eroare stocate în cache
@@ -34,7 +34,7 @@ function isValidUser(x) {
   const hasEmail =
     x.email == null || (typeof x.email === "string" && x.email.includes("@"));
 
-  console.log("hasId",hasId)
+  //console.log("hasId",hasId)
   return hasId && hasEmail;
 }
 

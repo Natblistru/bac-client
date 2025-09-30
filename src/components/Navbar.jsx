@@ -4,7 +4,7 @@ import { useAuth } from "../auth/auth";
 export default function Navbar({ onOpenLogin, onOpenSignup }) {
   const { me, logout } = useAuth();
   const navigate = useNavigate();
-  console.log("me", me)
+  //console.log("me", me)
   return (
     <header className="nav">
       <div className="logo">
