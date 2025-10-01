@@ -22,6 +22,7 @@ export default function Evaluation() {
   const [loading, setLoading] = useState(true);
 
   const { me, requireAuth } = useAuth();
+  const studentId = Number(localStorage.getItem("auth.student_id")) || null;
 
   const [evalModal, setEvalModal] = useState({
     open: false,
@@ -35,7 +36,7 @@ export default function Evaluation() {
     (async () => {
       try {
         setLoading(true);
-        const { data } = await api.get(`/api/evaluations/${id}/tree`, {
+        const { data } = await api.get(`/api/evaluations/${id}/tree/${studentId}`, {
           signal: ctrl.signal,
         });
         if (alive) setTree(data);
