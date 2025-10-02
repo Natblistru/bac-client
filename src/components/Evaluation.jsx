@@ -155,18 +155,71 @@ const itemsCount = (s) => (s?.items?.length ?? 0);
 
 //const done = Object.keys(answers).length;
 
-const openAnswersModal = (item) => {
+const openAnswersModal = (item, itemIndex) => {
   if (!requireAuth()) {
     return;
   }
 
   const qs = Array.isArray(item?.questions) ? item.questions : [];
-  setEvalModal({ open: true, data: qs });
+  setEvalModal({ open: true, data: qs, srcIndex, itemIndex });;
 };
 
 const closeAnswersModal = () => {
   setEvalModal({ open: false, data: [] });
 };
+
+const handleSaveSelections = ({ rows }) => {
+  // rows: [{ answerId, evaluation_answer_option_id, selectedIndex, ... }]
+  const mapByAnswer = new Map();
+  rows.forEach(r => {
+    if (r?.answerId && r?.evaluation_answer_option_id) {
+      mapByAnswer.set(Number(r.answerId), Number(r.evaluation_answer_option_id));
+    }
+  });
+
+  setTree(prev => {
+    if (!prev) return prev;
+    const sIdx = evalModal.srcIndex;
+    const iIdx = evalModal.itemIndex;
+    if (sIdx == null || iIdx == null) return prev;
+
+    // copiem structurile care se modifică (shallow clone e suficient aici)
+    const next = { ...prev };
+    const nextSources = [...(next.sources ?? [])];
+    const source = { ...nextSources[sIdx] };
+    const items = [...(source.items ?? [])];
+    const item = { ...items[iIdx] };
+    const questions = (item.questions ?? []).map(q => {
+      const answers = (q.answers ?? []).map(a => {
+        const chosenOptId = mapByAnswer.get(Number(a.id));
+        if (!chosenOptId) return a;
+
+        // 1) actualizează lista "options" (flat)
+        const opts = (a.options ?? []).map(o => ({
+          ...o,
+          selected: Number(o?.answer_option_id) === chosenOptId
+        }));
+
+        // 2) dacă ai și "evaluation_answer_options", marchează și acolo
+        const eao = (a.evaluation_answer_options ?? []).map(o => ({
+          ...o,
+          selected: Number(o?.id) === chosenOptId
+        }));
+
+        return { ...a, options: opts, evaluation_answer_options: eao };
+      });
+      return { ...q, answers };
+    });
+
+    item.questions = questions;
+    items[iIdx] = item;
+    source.items = items;
+    nextSources[sIdx] = source;
+    next.sources = nextSources;
+    return next;
+  });
+};
+
 
   return (
     <div className="app">
@@ -234,7 +287,7 @@ const closeAnswersModal = () => {
                     aria-label="Începe evaluarea"
                     onClick={(e) => {
                       e.stopPropagation();
-                      openAnswersModal(item); // vezi funcția mai jos
+                      openAnswersModal(item, idx); // vezi funcția mai jos
                     }}
                   >
                     ▶
@@ -403,7 +456,7 @@ const closeAnswersModal = () => {
       </footer>
 
       {evalModal.open && (
-        <EvalAnswersModal data={evalModal.data} onClose={closeAnswersModal} />
+        <EvalAnswersModal data={evalModal.data} onClose={closeAnswersModal} onSave={handleSaveSelections} />
       )}
     </div>
   );

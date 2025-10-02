@@ -48,6 +48,7 @@ function StepDots({ options = [], value = 0, onChange }) {
 export default function EvalAnswersModal({
   data = [],
   onClose,
+  onSave,
   title = "Începe evaluarea",
 }) {
   const boxRef = useRef(null);
@@ -144,7 +145,6 @@ export default function EvalAnswersModal({
     return { cur, max };
   }, [data, answerLevels]);
 
-  // ——— construiește rezultatele pentru consolă
 const buildResults = useCallback(() => {
   const rows = [];
   let total = 0;
@@ -242,6 +242,7 @@ const buildResults = useCallback(() => {
       );
       console.table(rows);
       console.log("TOTAL:", total, "/", maxTotal);
+      onSave?.({ rows });
     } catch (err) {
       console.error("Eroare la salvare răspunsuri:", err);
     } finally {

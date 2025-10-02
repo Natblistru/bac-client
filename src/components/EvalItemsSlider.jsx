@@ -7,6 +7,8 @@ import "./EvalItemsSlider.css";
 
 export default function EvalItemsSlider({ items }) {
   const trackRef = useRef(null);
+  const [list, setList] = useState(items); // copie locală editabilă
+  const currentItemIndexRef = useRef(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
   const [srcModal, setSrcModal] = useState({ open: false, html: "" });
@@ -14,6 +16,7 @@ export default function EvalItemsSlider({ items }) {
     open: false,
     data: [],
     title: "",
+    itemIndex: null,
   });
 
   const { me, requireAuth } = useAuth();
@@ -26,6 +29,8 @@ export default function EvalItemsSlider({ items }) {
   const closeSource = () => setSrcModal({ open: false, html: "" });
 
   const [answers, setAnswers] = useState({});
+
+  useEffect(() => { setList(items); }, [items]);
 
   useEffect(() => {
     const el = trackRef.current;
@@ -41,7 +46,7 @@ export default function EvalItemsSlider({ items }) {
       el.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
     };
-  }, [items]);
+  }, [list]);
 
   useEffect(() => {
     const el = trackRef.current;
@@ -107,7 +112,7 @@ export default function EvalItemsSlider({ items }) {
       ro.disconnect();
       cancelAnimationFrame(raf);
     };
-  }, [items]);
+  }, [list]);
 
   const nudge = (dir) => {
     const el = trackRef.current;
@@ -116,83 +121,91 @@ export default function EvalItemsSlider({ items }) {
     el.scrollBy({ left: dir * el.clientWidth, behavior: "smooth" });
   };
 
-  if (!items?.length) return null;
+  // if (!items?.length) return null;
+  if (!list?.length) return null;
 
   // Normalizează un item de tip "slider" la forma cerută de EvalAnswersModal
   function normalizeForEvalModal(item) {
-    const qs = (item?.evaluation_questions || item?.questions || []).map((q) => {
-      const rawAnswers = q?.evaluation_answers || q?.answers || [];
+    const qs = (item?.evaluation_questions || item?.questions || []).map(
+      (q) => {
+        const rawAnswers = q?.evaluation_answers || q?.answers || [];
 
-      const answers = rawAnswers.map((a) => {
-        const rawOpts = a?.evaluation_answer_options || a?.options || [];
+        const answers = rawAnswers.map((a) => {
+          const rawOpts = a?.evaluation_answer_options || a?.options || [];
 
-        const options = rawOpts.map((o) => {
-          // surse posibile pentru label/points (în JSON pot fi direct pe opțiune
-          // sau în "evaluation_option")
-          const label =
-            o?.label ?? o?.evaluation_option?.label ?? "";
-          const points =
-            typeof o?.points === "number"
-              ? o.points
-              : Number(o?.evaluation_option?.points ?? 0);
+          const options = rawOpts.map((o) => {
+            // surse posibile pentru label/points (în JSON pot fi direct pe opțiune
+            // sau în "evaluation_option")
+            const label = o?.label ?? o?.evaluation_option?.label ?? "";
+            const points =
+              typeof o?.points === "number"
+                ? o.points
+                : Number(o?.evaluation_option?.points ?? 0);
 
-          // ✳️ PROPAGĂ scorul studentului și "selected" dacă vin din backend
-          const student_points =
-            o?.student_points === null || o?.student_points === undefined
-              ? null
-              : Number(o.student_points);
+            // ✳️ PROPAGĂ scorul studentului și "selected" dacă vin din backend
+            const student_points =
+              o?.student_points === null || o?.student_points === undefined
+                ? null
+                : Number(o.student_points);
 
-          const selected = Boolean(o?.selected);
+            const selected = Boolean(o?.selected);
+
+            return {
+              // chei compatibile cu StepDots/EvalAnswersModal
+              answer_option_id: o?.answer_option_id ?? o?.id, // id din evaluation_answer_options
+              option_id: o?.option_id ?? o?.evaluation_option_id, // id din evaluation_options
+              label,
+              points,
+
+              // ✳️ noile câmpuri păstrate:
+              student_points,
+              selected,
+            };
+          });
 
           return {
-            // chei compatibile cu StepDots/EvalAnswersModal
-            answer_option_id: o?.answer_option_id ?? o?.id,            // id din evaluation_answer_options
-            option_id:        o?.option_id        ?? o?.evaluation_option_id, // id din evaluation_options
-            label,
-            points,
-
-            // ✳️ noile câmpuri păstrate:
-            student_points,
-            selected,
+            id: a.id,
+            task: a.task,
+            content: a.content,
+            max_points: a.max_points,
+            options,
           };
         });
 
         return {
-          id: a.id,
-          task: a.task,
-          content: a.content,
-          max_points: a.max_points,
-          options,
+          id: q.id,
+          order_number: q.order_number,
+          subtopic_id: q.subtopic_id ?? item.subtopic_id,
+          subtopic_name: q.subtopic_name ?? item.subtopic_name,
+          topic_id: q.topic_id ?? item.topic_id,
+          topic_name: q.topic_name ?? item.topic_name,
+          task: q.task,
+          hint: q.hint,
+          placeholder: q.placeholder,
+          content_settings: q.content_settings,
+          type: q.type,
+          answers,
         };
-      });
-
-      return {
-        id: q.id,
-        order_number: q.order_number,
-        subtopic_id: q.subtopic_id ?? item.subtopic_id,
-        subtopic_name: q.subtopic_name ?? item.subtopic_name,
-        topic_id: q.topic_id ?? item.topic_id,
-        topic_name: q.topic_name ?? item.topic_name,
-        task: q.task,
-        hint: q.hint,
-        placeholder: q.placeholder,
-        content_settings: q.content_settings,
-        type: q.type,
-        answers,
-      };
-    });
+      }
+    );
 
     return qs;
   }
 
-  const openAnswersModal = (item) => {
+  const openAnswersModal = (item, itemIndex) => {
     if (!requireAuth()) {
       showToast("Trebuie să fii autentificat pentru a începe evaluarea.");
       return;
     }
 
     const qs = normalizeForEvalModal(item);
-    setEvalModal({ open: true, data: qs, title: "Începe evaluarea" });
+    currentItemIndexRef.current = itemIndex;
+    setEvalModal({
+      open: true,
+      data: qs,
+      title: "Începe evaluarea",
+      itemIndex,
+    });
   };
 
   const showToast = (msg, ms = 2600) => {
@@ -209,7 +222,7 @@ export default function EvalItemsSlider({ items }) {
   return (
     <div className="subslider">
       <div className="subslider-track" ref={trackRef}>
-        {items?.map((item, idx) => {
+        {list?.map((item, idx) => {
           return (
             <div className="subslide" key={item.id ?? idx}>
               <div className="subslide-card">
@@ -224,7 +237,7 @@ export default function EvalItemsSlider({ items }) {
                   aria-disabled={!canStart}
                   onClick={(e) => {
                     e.stopPropagation();
-                    openAnswersModal(item); 
+                    openAnswersModal(item, idx);
                   }}
                 >
                   ▶
@@ -377,13 +390,76 @@ export default function EvalItemsSlider({ items }) {
       >
         ›
       </button>
-
       {evalModal.open && (
         <EvalAnswersModal
           data={evalModal.data}
           onClose={closeAnswersModal}
           title={evalModal.title}
+          onSave={(payload) => {
+            // payload = { rows: [...] }
+            const rows = payload?.rows ?? [];
+            // lookup rapid după answerId
+            const rowByAnswerId = Object.fromEntries(
+              rows.map(r => [String(r.answerId), r])
+            );
+
+            setList(prev => {
+              const itemIndex = currentItemIndexRef.current;
+              if (itemIndex == null) return prev;
+
+              // clonă imutabilă; dacă ai Node 18+, poți folosi structuredClone
+              const next = prev.map((it, i) => {
+                if (i !== itemIndex) return it;
+
+                const questions = it.evaluation_questions || it.questions || [];
+                const newQuestions = questions.map(q => {
+                  const answers = q.evaluation_answers || q.answers || [];
+                  const newAnswers = answers.map(a => {
+                    const row = rowByAnswerId[String(a.id)];
+                    if (!row) return a;
+
+                    const targetEaoId = row.evaluation_answer_option_id; // ID din evaluation_answer_options
+                    const chosenPoints = row.points;
+
+                    const updateOpts = (arr, idKey) =>
+                      Array.isArray(arr)
+                        ? arr.map(opt => {
+                            const optId = opt[idKey]; // 'answer_option_id' sau 'id'
+                            const isChosen = optId === targetEaoId;
+                            return {
+                              ...opt,
+                              selected: isChosen,
+                              // dacă vrei să vezi scorul curent și în UI
+                              student_points: isChosen ? chosenPoints : null,
+                            };
+                          })
+                        : arr;
+
+                    return {
+                      ...a,
+                      // forma "flat" pentru UI
+                      options: updateOpts(a.options, 'answer_option_id'),
+                      // forma relațională (dacă o ai în item)
+                      evaluation_answer_options: updateOpts(a.evaluation_answer_options, 'id'),
+                    };
+                  });
+
+                  // păstrează aceeași cheie (evaluation_answers vs answers)
+                  return q.evaluation_answers
+                    ? { ...q, evaluation_answers: newAnswers }
+                    : { ...q, answers: newAnswers };
+                });
+
+                return it.evaluation_questions
+                  ? { ...it, evaluation_questions: newQuestions }
+                  : { ...it, questions: newQuestions };
+              });
+
+              return next;
+            });
+          }}
         />
+
       )}
     </div>
   );
