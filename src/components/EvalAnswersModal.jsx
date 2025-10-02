@@ -240,7 +240,6 @@ const buildResults = useCallback(() => {
         "/api/student-evaluation-answers/bulk",
         { items }
       );
-      console.log("Salvat:", resp);
       console.table(rows);
       console.log("TOTAL:", total, "/", maxTotal);
     } catch (err) {
@@ -281,18 +280,11 @@ const buildResults = useCallback(() => {
 
   console.log(data);
 
-  // imediat după `console.log(data);` sau chiar sus în componentă:
-useEffect(() => {
-  console.log("[DBG:data] len=", Array.isArray(data) ? data.length : "N/A", data);
-}, [data]);
-
 useEffect(() => {
   if (hydrated) {
-    console.log("[DBG:hydrate] already hydrated -> skip");
     return;
   }
   if (!Array.isArray(data) || data.length === 0) {
-    console.log("[DBG:hydrate] no data yet");
     return;
   }
 
@@ -308,26 +300,15 @@ useEffect(() => {
       const useIdx = idx >= 0 ? idx : 0;
       const useLbl = opts[useIdx]?.label ?? "";
       init[String(a.id)] = { index: useIdx, label: useLbl };
-
-      console.log(`[DBG:hydrate] a.id=${a.id} idx=${idx} useIdx=${useIdx} useLbl="${useLbl}"`, opts);
     }
   }
 
-  console.log("[DBG:hydrate] init answerLevels =", init);
   setAnswerLevels(prev => {
     const next = Object.keys(prev).length ? prev : init;
-    console.log("[DBG:hydrate] setAnswerLevels ->", next);
     return next;
   });
   setHydrated(true);
-  console.log("[DBG:hydrate] setHydrated(true)");
 }, [data, hydrated]);
-
-// urmăriți orice schimbare de state:
-useEffect(() => {
-  console.log("[DBG:answerLevels] changed =", answerLevels);
-}, [answerLevels]);
-
 
   return (
     <>

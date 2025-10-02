@@ -120,47 +120,67 @@ export default function EvalItemsSlider({ items }) {
 
   // Normalizează un item de tip "slider" la forma cerută de EvalAnswersModal
   function normalizeForEvalModal(item) {
-    const qs = (item?.evaluation_questions || item?.questions || []).map(
-      (q) => {
-        const rawAnswers = q?.evaluation_answers || q?.answers || [];
-        const answers = rawAnswers.map((a) => {
-          const rawOpts = a?.evaluation_answer_options || a?.options || [];
-          const options = rawOpts.map((o) => ({
-            // chei compatibile cu ce așteaptă StepDots / modal
-            answer_option_id: o?.answer_option_id ?? o?.id,
-            option_id: o?.option_id ?? o?.evaluation_option_id,
-            label: o?.label ?? o?.evaluation_option?.label ?? "",
-            points:
-              typeof o?.points === "number"
-                ? o.points
-                : Number(o?.evaluation_option?.points ?? 0),
-          }));
+    const qs = (item?.evaluation_questions || item?.questions || []).map((q) => {
+      const rawAnswers = q?.evaluation_answers || q?.answers || [];
+
+      const answers = rawAnswers.map((a) => {
+        const rawOpts = a?.evaluation_answer_options || a?.options || [];
+
+        const options = rawOpts.map((o) => {
+          // surse posibile pentru label/points (în JSON pot fi direct pe opțiune
+          // sau în "evaluation_option")
+          const label =
+            o?.label ?? o?.evaluation_option?.label ?? "";
+          const points =
+            typeof o?.points === "number"
+              ? o.points
+              : Number(o?.evaluation_option?.points ?? 0);
+
+          // ✳️ PROPAGĂ scorul studentului și "selected" dacă vin din backend
+          const student_points =
+            o?.student_points === null || o?.student_points === undefined
+              ? null
+              : Number(o.student_points);
+
+          const selected = Boolean(o?.selected);
 
           return {
-            id: a.id,
-            task: a.task,
-            content: a.content,
-            max_points: a.max_points,
-            options,
+            // chei compatibile cu StepDots/EvalAnswersModal
+            answer_option_id: o?.answer_option_id ?? o?.id,            // id din evaluation_answer_options
+            option_id:        o?.option_id        ?? o?.evaluation_option_id, // id din evaluation_options
+            label,
+            points,
+
+            // ✳️ noile câmpuri păstrate:
+            student_points,
+            selected,
           };
         });
 
         return {
-          id: q.id,
-          order_number: q.order_number,
-          subtopic_id: q.subtopic_id ?? item.subtopic_id,
-          subtopic_name: q.subtopic_name ?? item.subtopic_name,
-          topic_id: q.topic_id ?? item.topic_id,
-          topic_name: q.topic_name ?? item.topic_name,
-          task: q.task,
-          hint: q.hint,
-          placeholder: q.placeholder,
-          content_settings: q.content_settings,
-          type: q.type,
-          answers,
+          id: a.id,
+          task: a.task,
+          content: a.content,
+          max_points: a.max_points,
+          options,
         };
-      }
-    );
+      });
+
+      return {
+        id: q.id,
+        order_number: q.order_number,
+        subtopic_id: q.subtopic_id ?? item.subtopic_id,
+        subtopic_name: q.subtopic_name ?? item.subtopic_name,
+        topic_id: q.topic_id ?? item.topic_id,
+        topic_name: q.topic_name ?? item.topic_name,
+        task: q.task,
+        hint: q.hint,
+        placeholder: q.placeholder,
+        content_settings: q.content_settings,
+        type: q.type,
+        answers,
+      };
+    });
 
     return qs;
   }

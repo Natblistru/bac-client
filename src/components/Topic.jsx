@@ -80,10 +80,12 @@ export default function Topic() {
             include_presentations: 0,   
             include_breakpoints: 1,
             include_flip_cards: 1,
-            include_subtopics: 1,       
+            include_subtopics: 1,
+            student_id: Number(localStorage.getItem("auth.student_id")) || null,       
           },
         });
         if (alive) setRow(data);
+          console.log('data topic', data);
       } catch (e) {
         if (alive) setErr("Nu s-a putut încărca topicul.");
       } finally {
