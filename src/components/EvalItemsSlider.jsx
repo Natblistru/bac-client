@@ -219,13 +219,74 @@ export default function EvalItemsSlider({ items }) {
 
   const canStart = !!me?.id;
 
+// punctele dintr-o opțiune (acoperă atât .points direct, cât și evaluation_option.points)
+const ptsOf = (opt) =>
+  typeof opt?.points === "number"
+    ? opt.points
+    : Number(opt?.evaluation_option?.points ?? 0);
+
+// calculează {cur, max, any} pentru un item (questions -> answers -> options)
+const scoreOfItem = (item) => {
+  let cur = 0;
+  let max = 0;
+  let any = false;
+
+  const questions = item?.questions ?? item?.evaluation_questions ?? [];
+  for (const q of questions) {
+    const answers = q?.answers ?? q?.evaluation_answers ?? [];
+    for (const a of answers) {
+      max += Number(a?.max_points ?? 0);
+
+      // 1) varianta "flat"
+      const opts = Array.isArray(a?.options) ? a.options : [];
+      let added = false;
+      if (opts.length) {
+        const sel = opts.find(
+          (o) => o?.selected === true || o?.selected === "true" || o?.selected === 1
+        );
+        if (sel) {
+          cur += Number(ptsOf(sel) ?? 0);
+          any = true;
+          added = true;
+        }
+      }
+
+      // 2) fallback: evaluation_answer_options
+      if (!added) {
+        const eao = Array.isArray(a?.evaluation_answer_options)
+          ? a.evaluation_answer_options
+          : [];
+        if (eao.length) {
+          const sel2 = eao.find(
+            (o) => o?.selected === true || o?.selected === "true" || o?.selected === 1
+          );
+          if (sel2) {
+            cur += Number(ptsOf(sel2) ?? 0);
+            any = true;
+          }
+        }
+      }
+    }
+  }
+  return { cur, max, any };
+};
+
+
+
   return (
     <div className="subslider">
       <div className="subslider-track" ref={trackRef}>
         {list?.map((item, idx) => {
+
+          // scor + flag "any"
+          const { cur, max, any } = scoreOfItem(item);
+
+          // fundal roz pal dacă există măcar o selecție
+          const cardStyle = any ? { background: "rgba(255, 240, 244, 0.3)" } : null;
+
           return (
             <div className="subslide" key={item.id ?? idx}>
-              <div className="subslide-card">
+              <div className={`subslide-card ${any ? 'answered' : ''}`} style={cardStyle}>
                 <button
                   type="button"
                   className="eval-start-icon"
@@ -235,12 +296,21 @@ export default function EvalItemsSlider({ items }) {
                       : "Autentifică-te pentru a începe"
                   }
                   aria-disabled={!canStart}
+                  style={{
+                    padding: "2px 6px",
+                    borderRadius: 6,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: any ? "#7c1e2b" : "#475569",
+                    background: any ? "#ffd9e3" : "#e5e7eb",
+                    border: "1px solid rgba(0,0,0,.06)",
+                  }}
                   onClick={(e) => {
                     e.stopPropagation();
                     openAnswersModal(item, idx);
                   }}
                 >
-                  ▶
+                  {cur}/{max}
                 </button>
 
                 {item?.task?.html ? (

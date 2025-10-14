@@ -220,6 +220,49 @@ const handleSaveSelections = ({ rows }) => {
   });
 };
 
+// calculează scorul pe un item (sumă pe answers)
+const scoreOfItem = (item) => {
+  let cur = 0;
+  let max = 0;
+  let any = false;
+
+  const questions = item?.questions ?? [];
+  for (const q of questions) {
+    const answers = q?.answers ?? [];
+    for (const a of answers) {
+      max += Number(a?.max_points ?? 0);
+
+      // caută întâi în forma "flat" a opțiunilor
+      const opts = Array.isArray(a?.options) ? a.options : [];
+      let added = false;
+
+      if (opts.length) {
+        const sel = opts.find(o => o?.selected === true || o?.selected === "true" || o?.selected === 1);
+        if (sel) {
+          cur += Number(sel?.points ?? 0);
+          any = true;
+          added = true;
+        }
+      }
+
+      // fallback: dacă nu ai "options", verifică și "evaluation_answer_options"
+      if (!added) {
+        const eao = Array.isArray(a?.evaluation_answer_options) ? a.evaluation_answer_options : [];
+        if (eao.length) {
+          const sel2 = eao.find(o => o?.selected === true || o?.selected === "true" || o?.selected === 1);
+          if (sel2) {
+            const pts = Number(sel2?.evaluation_option?.points ?? sel2?.points ?? 0);
+            cur += pts;
+            any = true;
+          }
+        }
+      }
+    }
+  }
+
+  return { cur, max, any };
+};
+
 
   return (
     <div className="app">
@@ -251,15 +294,23 @@ const handleSaveSelections = ({ rows }) => {
             const anchorId = `item-${srcIndex}-${n}`;
             const isHi = highlight?.src === srcIndex && highlight?.itemKey === anchorId;
 
+            const { cur, max, any } = scoreOfItem(item);
+
+            const questionStyle = {
+              ...(isHi ? { outline: "2px solid #3b82f6", borderRadius: 6 } : null),
+              ...(any ? { background: "rgba(255, 240, 244, 0.3)" } : null), // roz pal
+            };
+
             return (
               <div
-                className="question"
+                className={`question ${any ? 'answered' : ''}`}
                 id={anchorId}
                 key={item.id ?? item.order_number ?? idx}
                 onMouseLeave={() => {
                   setHoverLink((prev) => prev?.itemKey === anchorId ? null : prev);
                 }}
-                style={isHi ? { outline: "2px solid #3b82f6", borderRadius: 6 } : undefined}
+                // style={isHi ? { outline: "2px solid #3b82f6", borderRadius: 6 } : undefined}
+                style={questionStyle}
               >
                 <div className="q-head">
                   <span className="q-no">{item.order_number}</span>
@@ -285,12 +336,21 @@ const handleSaveSelections = ({ rows }) => {
                     className="eval-start-icon"
                     title="Începe evaluarea"
                     aria-label="Începe evaluarea"
+                    style={{
+                      padding: "2px 6px",
+                      borderRadius: 6,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: any ? "#7c1e2b" : "#475569",
+                      background: any ? "#ffd9e3" : "#e5e7eb",
+                      border: "1px solid rgba(0,0,0,.06)",
+                    }}
                     onClick={(e) => {
                       e.stopPropagation();
                       openAnswersModal(item, idx); // vezi funcția mai jos
                     }}
                   >
-                    ▶
+                    {cur}/{max}
                   </button>
 
                   {item?.task?.html && (
