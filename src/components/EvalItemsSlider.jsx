@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/auth";
+import api, { bootCsrf } from "../routes/api";
 import DraggableModal from "./DraggableModal";
 import EvalAnswersModal from "./EvalAnswersModal";
 import "./EvalItemsSlider.css";
@@ -29,6 +30,8 @@ export default function EvalItemsSlider({ items }) {
   const closeSource = () => setSrcModal({ open: false, html: "" });
 
   const [answers, setAnswers] = useState({});
+
+  const studentId = Number(localStorage.getItem("auth.student_id")) || null;
 
   useEffect(() => { setList(items); }, [items]);
 
@@ -124,6 +127,46 @@ export default function EvalItemsSlider({ items }) {
   // if (!items?.length) return null;
   if (!list?.length) return null;
 
+  const backendTextForQuestion = (maybeQ) => {
+    // acceptă ori question, ori array de answers
+    const answersArray = Array.isArray(maybeQ)
+      ? maybeQ
+      : (maybeQ?.answers ?? maybeQ?.evaluation_answers ?? []);
+
+    if (!Array.isArray(answersArray) || answersArray.length === 0) return "";
+
+    // 1) preferă textul salvat de student (dacă vine din backend)
+    const withStudent = answersArray.find(a => a?.student_answer?.html && String(a.student_answer.html).trim().length);
+    if (withStudent) return String(withStudent.student_answer.html).trim();
+
+    return "";
+  };
+
+
+  const buildTextRowsForItem = (item, answers, studentId) => {
+    const rows = [];
+    const qArr = item?.questions || item?.evaluation_questions || [];
+    for (const q of qArr) {
+      const aArr = q?.answers || q?.evaluation_answers || [];
+      for (const a of aArr) {
+        // valoarea din input/textarea e salvată în answers[q.id]
+        const raw = (answers?.[q.id] ?? "").toString().trim();
+        if (!raw) continue;
+
+        rows.push({
+          student_id: studentId,
+          evaluation_answer_id: a.id,
+          content: { html: raw },   // 🔴 IMPORTANT: cheie "html"
+          status: 0,
+        });
+      }
+    }
+    return rows;
+  };
+
+
+
+
   // Normalizează un item de tip "slider" la forma cerută de EvalAnswersModal
   function normalizeForEvalModal(item) {
     const qs = (item?.evaluation_questions || item?.questions || []).map(
@@ -192,7 +235,7 @@ export default function EvalItemsSlider({ items }) {
     return qs;
   }
 
-  const openAnswersModal = (item, itemIndex) => {
+  const openAnswersModal = async (item, itemIndex) => {
     if (!requireAuth()) {
       showToast("Trebuie să fii autentificat pentru a începe evaluarea.");
       return;
@@ -206,6 +249,17 @@ export default function EvalItemsSlider({ items }) {
       title: "Începe evaluarea",
       itemIndex,
     });
+
+    // 2) salvează textele introduse până acum (în fundal)
+    const rows = buildTextRowsForItem(item, answers, studentId);
+    if (rows.length) {
+      try {
+        await bootCsrf().catch(() => {});
+        await api.post("/api/student-answers/bulk", { items: rows });
+      } catch (err) {
+        console.warn("Eroare la salvarea răspunsurilor text:", err);
+      }
+    }
   };
 
   const showToast = (msg, ms = 2600) => {
@@ -347,7 +401,7 @@ const scoreOfItem = (item) => {
                   const inputId = `q-${q.id}`;
                   const rows = Number(q?.content_settings?.nr_rand ?? 4);
                   const max = rows * 75; // 75 caractere/rând
-                  const val = answers?.[q.id] ?? "";
+                  const val = answers?.[q.id] ?? backendTextForQuestion(q);
 
                   if (t === "virtual") return null;
 

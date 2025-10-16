@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import api from "../routes/api";
+import api, { bootCsrf } from "../routes/api";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/auth";
 import ResizableSplit from "./ResizableSplit";
@@ -29,6 +29,33 @@ export default function Evaluation() {
     data: [],
   });
 
+  function htmlToText(html) {
+    const d = document.createElement('div');
+    d.innerHTML = html || '';
+    return (d.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function buildTextRowsForItem(item, answers, studentId) {
+    const rows = [];
+    for (const q of item?.questions ?? []) {
+      const html = (answers?.[q.id] ?? '').trim();
+      if (!html) continue;
+
+      // de regulă există un singur answer per întrebare
+      const ans = (q.answers ?? [])[0];
+      if (!ans?.id) continue;
+
+      rows.push({
+        student_id: studentId,
+        evaluation_answer_id: ans.id,
+        content: { html },  // poți pune și alte câmpuri (ex: timestamp)
+      });
+    }
+    return rows;
+  }
+
+
+
   useEffect(() => {
     let alive = true;
     const ctrl = new AbortController();
@@ -53,6 +80,33 @@ export default function Evaluation() {
     };
   }, [id]);
 
+  useEffect(() => {
+    if (!tree) return;
+
+    const init = {};
+    for (const src of tree.sources ?? []) {
+      for (const it of src.items ?? []) {
+        for (const q of it.questions ?? []) {
+          const a = (q.answers ?? [])[0];                 // de obicei 1 answer pe întrebare
+          const html = a?.student_answer?.html;
+          if (html) {
+            init[q.id] = htmlToText(html);               // pun textul în state-ul controlat
+          }
+        }
+      }
+    }
+
+    // nu călca peste ce a tastat deja utilizatorul în sesiunea curentă
+    setAnswers(prev => {
+      const next = { ...prev };
+      for (const [qid, val] of Object.entries(init)) {
+        if (next[qid] == null || next[qid] === '') next[qid] = val;
+      }
+      return next;
+    });
+  }, [tree]);
+
+
   const sources = tree?.sources ?? [];
   const src = sources[srcIndex] ?? null;
 
@@ -76,7 +130,7 @@ export default function Evaluation() {
 
   if (loading) return <div>Se încarcă…</div>;
   if (!tree) return <div>Evaluarea nu a fost găsită.</div>;
-  // console.log(tree);
+  console.log(tree);
 
   // Stiluri inline pentru footer fix
 const footerStyle = {
@@ -155,13 +209,25 @@ const itemsCount = (s) => (s?.items?.length ?? 0);
 
 //const done = Object.keys(answers).length;
 
-const openAnswersModal = (item, itemIndex) => {
-  if (!requireAuth()) {
-    return;
-  }
+const openAnswersModal = async (item, itemIndex) => {
+  if (!requireAuth()) return;
 
   const qs = Array.isArray(item?.questions) ? item.questions : [];
-  setEvalModal({ open: true, data: qs, srcIndex, itemIndex });;
+  // deschizi imediat modalul
+  setEvalModal({ open: true, data: qs, srcIndex, itemIndex });
+
+  // apoi salvezi textele în fundal
+  const rows = buildTextRowsForItem(item, answers, studentId);
+  if (rows.length) {
+    try {
+      await bootCsrf().catch(() => {});
+      await api.post('/api/student-answers/bulk', { items: rows });
+      // opțional: toast „Salvat răspunsurile text”
+    } catch (e) {
+      console.warn('Nu am putut salva răspunsurile text:', e);
+      // opțional: toast de eroare
+    }
+  }
 };
 
 const closeAnswersModal = () => {
@@ -367,6 +433,7 @@ const scoreOfItem = (item) => {
                   const rows = Number(q?.content_settings?.nr_rand ?? 4);
                   const max = rows * 75; // 75 caractere/rând
                   const val = answers?.[q.id] ?? "";
+                  console.log(val)
 
                   if (t === "virtual") return null;
 
